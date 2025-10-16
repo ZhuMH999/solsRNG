@@ -165,4 +165,4 @@ Natural,8
 Good,5
 Uncommon,4
 Common,2
-Nothing,1
+Nothing,1,12
