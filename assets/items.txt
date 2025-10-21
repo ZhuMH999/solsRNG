@@ -31,3 +31,13 @@ Oblivion Potion,8,1R
 Warp Potion,23,2000R
 Transcendent Potion,24,20000R
 Gladiator Potion,35,900S
+Rune of Wind,37,600S
+Rune of Frost,38,600S
+Rune of Rainstorm,39,600S
+Rune of Dust,40,600S
+Rune of Hell,41,600S
+Rune of Galaxy,42,600S
+Rune of Corruption,43,600S
+Rune of Nothing,44,600S
+Rune of Eclipse,45,600S
+Rune of Everything,46,300S
