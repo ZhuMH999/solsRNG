@@ -17,21 +17,22 @@ class Model:
     def __init__(self):
         self.aura_list = parse_file("assets/auras.txt", True)
         self.biome_list = parse_file("assets/biomes.txt", True)
-        self.potions_list = parse_file("assets/items.txt")
+        self.items_list = parse_file("assets/items.txt")
         self.buffs_list = parse_file("assets/buffs.txt")
 
         self.rolls = 0
         self.time = 10
-        self.biome = 0
+        self.biome = None
         self.runes = []
-        self.biome_timer = time.time() + 1000
+        self.biome_timer = time.time()
         self.time_timer = time.time() + 75
         self.luck = 1.0
-        self.roll_info = [time.time()-1000, 3.2, 1, 10]
+        self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]
 
         self.inventory = []
         self.buffs = []
-        self.add_buffs(42)
+        self.add_buffs(0)
+        self.add_buffs(1)
 
     def roll_aura(self, luck, visuals=None, is_real_roll=True):
         if (is_real_roll and time.time() - self.roll_info[0] > 0) or not is_real_roll:
@@ -41,8 +42,12 @@ class Model:
             for i in range(len(self.aura_list)):
                 rarity = self.aura_list[i][1] / luck
 
-                # If the aura is from glitch, dreamspace or limbo biome, and it is not any of the biomes
-                if len(self.aura_list[i]) == 3 and self.aura_list[i][2] != self.biome and (self.aura_list[i][2] == 0 or self.aura_list[i][2] == 1 or self.aura_list[i][2] == 12):
+                # If the aura is from glitch or dreamspace + it is not any of the biomes
+                if len(self.aura_list[i]) == 3 and self.aura_list[i][2] != self.biome and self.biome != 0 and (self.aura_list[i][2] == 0 or self.aura_list[i][2] == 1):
+                    continue
+
+                # If the aura is from limbo + it is not limbo OR the aura is not from limbo + it is limbo
+                if (len(self.aura_list[i]) == 3 and self.aura_list[i][2] == 12 and self.biome != 12) or (len(self.aura_list[i]) != 3 and self.biome == 12) or (len(self.aura_list[i]) == 3 and self.aura_list[i][2] != 12 and self.biome == 12):
                     continue
 
                 # If the aura can be rolled w/o breakthrough in the biome
@@ -53,7 +58,8 @@ class Model:
                 # If you roll the aura OR there are no more auras below
                 if random.randint(1, int(round(rarity, 3)*1000)) <= 1000 or (self.aura_list[i-1][1] < luck and i > 0) or (self.aura_list[i][1] == 2 or self.aura_list[i][1] == 1):
                     if is_real_roll:
-                        visuals.animate_roll(luck, self.aura_list[i][0], True)
+                        if not self.roll_info[5]:
+                            visuals.animate_roll(luck, self.aura_list[i][0], True)
                         self.manage_bonus_roll(True)
                         self.rolls += 1
                     return self.aura_list[i]
@@ -85,7 +91,7 @@ class Model:
                     self.luck += float(e.split('L')[0])
                 elif 'S' in e:
                     pass
-                elif 'B' in e:
+                elif 'B' in e and int(e.split('B')[0]) not in self.runes:
                     self.runes.append(int(e.split('B')[0]))
                     print(self.runes)
             else:
@@ -106,7 +112,7 @@ class Model:
             return 10
 
     def add_buffs(self, item_used):
-        item = self.potions_list[item_used]
+        item = self.items_list[item_used]
 
         # Splits the buffs up, so if there are multiple buffs they will all be handled
         for t in item[1].split(';'):
@@ -144,9 +150,10 @@ class Model:
         if time.time() - self.biome_timer > 0:
             self.biome_timer = time.time() + 1
             self.biome = None
-            for i in range(len(self.biome_list)):
+            for i in range(9):
                 if random.randint(1, self.biome_list[i][1]) == 1:
-                    self.biome = self.biome_list[i]
+                    self.biome = i
+                    print(self.biome_list[i])
                     self.biome_timer = time.time() + self.biome_list[i][2]
                     print(self.biome)
                     break
@@ -155,16 +162,30 @@ class Model:
         if time.time() - self.time_timer > 0:
             if self.time == 10:
                 self.time = 11
-                self.time_timer = time.time() + 150
+                self.time_timer = time.time() + self.biome_list[self.time][2]
             elif self.time == 11:
                 self.time = 10
-                self.time_timer = time.time() + 150
+                self.time_timer = time.time() + self.biome_list[self.time][2]
 
     def check_where_clicked(self, x, y, visuals):
-        if 325 <= x <= 475 and 510 <= y <= 580:
+        if 425 <= x <= 575 and 670 <= y <= 730:
             rolled = self.roll_aura(self.manage_luck(), visuals)
             print(rolled)
+        elif 270 <= x <= 400 and 675 <= y <= 730:
+            if self.roll_info[4]:
+                self.roll_info[4] = False
+            else:
+                self.roll_info[4] = True
+        elif 600 <= x <= 730 and 675 <= y <= 730:
+            if self.roll_info[5]:
+                self.roll_info[5] = False
+            else:
+                self.roll_info[5] = True
 
-    def handle_game_tick(self):
+    def handle_game_tick(self, visuals):
         self.roll_biome()
+        self.change_time()
         self.check_buffs_and_remove()
+
+        if self.roll_info[4]:
+            self.roll_aura(self.luck, visuals, True)

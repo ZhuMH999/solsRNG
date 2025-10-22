@@ -27,7 +27,7 @@ class Controller:
                         self.model.check_where_clicked(x, y, self.visuals)
 
             self.visuals.draw(x, y)
-            self.model.handle_game_tick()
+            self.model.handle_game_tick(self.visuals)
 
             pygame.display.update()
             self.clock.tick(60)
