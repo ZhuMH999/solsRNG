@@ -7,7 +7,7 @@ Haste I,0.2S
 Haste II,0.25S
 Haste III,0.3S
 Oblivion,600000L
-Lucky Penny,0.77L
+Lucky Penny,0.77L;0.07R
 Warmth?,0.2L
 Incense,0.2L
 Tracking the location...,0.5L

@@ -41,3 +41,17 @@ Rune of Corruption,43,600S
 Rune of Nothing,44,600S
 Rune of Eclipse,45,600S
 Rune of Everything,46,300S
+Void Coin
+Lucky Penny,9,600SC0.05
+Gear A
+Gear B
+Stella's Star
+Empty Bottle
+Wind Essence
+Icicle
+Rainy Bottle
+Eternal Flame
+Piece of Star
+Curruptaine
+NULL?
+Hour Glass
