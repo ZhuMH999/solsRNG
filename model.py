@@ -1,5 +1,8 @@
 import random
 import time
+from snippets import buff_manager as buffm
+from snippets import inventory_UI_manager as iUIm
+from snippets import roll_manager as rollm
 
 def parse_file(filename, int_or_not=False):
     with open(filename, 'r') as file:
@@ -15,136 +18,51 @@ def parse_file(filename, int_or_not=False):
 
 class Model:
     def __init__(self):
-        self.aura_list = parse_file("assets/auras.txt", True)
-        self.biome_list = parse_file("assets/biomes.txt", True)
-        self.items_list = parse_file("assets/items.txt")
-        self.buffs_list = parse_file("assets/buffs.txt")
+        self.aura_list = parse_file("files/game_data/auras.txt", True)
+        self.biome_list = parse_file("files/game_data/biomes.txt", True)
+        self.items_list = parse_file("files/game_data/items.txt")
+        self.buffs_list = parse_file("files/game_data/buffs.txt")
 
         self.rolls = 0
         self.time = 10
         self.biome = None
         self.runes = []
         self.biome_timer = time.time()
-        self.time_timer = time.time() + 75
-        self.luck = 1.0
-        self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]
+        self.time_timer = time.time() + 30
+        self.luck = 1
+        self.roll_info = [time.time()-1000, 0, 1, 10, False, False]
 
         self.inventory = []
         self.buffs = []
-        self.add_buffs(0)
-        self.add_buffs(1)
-
-    def roll_aura(self, luck, visuals=None, is_real_roll=True):
-        if (is_real_roll and time.time() - self.roll_info[0] > 0) or not is_real_roll:
-            if is_real_roll:
-                self.roll_info[0] = time.time() + self.roll_info[1]
-
-            for i in range(len(self.aura_list)):
-                rarity = self.aura_list[i][1] / luck
-
-                # If the aura is from glitch or dreamspace + it is not any of the biomes
-                if len(self.aura_list[i]) == 3 and self.aura_list[i][2] != self.biome and self.biome != 0 and (self.aura_list[i][2] == 0 or self.aura_list[i][2] == 1):
-                    continue
-
-                # If the aura is from limbo + it is not limbo OR the aura is not from limbo + it is limbo
-                if (len(self.aura_list[i]) == 3 and self.aura_list[i][2] == 12 and self.biome != 12) or (len(self.aura_list[i]) != 3 and self.biome == 12) or (len(self.aura_list[i]) == 3 and self.aura_list[i][2] != 12 and self.biome == 12):
-                    continue
-
-                # If the aura can be rolled w/o breakthrough in the biome
-                if len(self.aura_list[i]) == 3 and ((self.aura_list[i][2] == self.biome or self.aura_list[i][2] == self.time) or self.aura_list[i][2] in self.runes):
-                    rarity /= self.manage_breakthrough(self.aura_list[i][2])
-                    print(self.aura_list[i])
-
-                # If you roll the aura OR there are no more auras below
-                if random.randint(1, int(round(rarity, 3)*1000)) <= 1000 or (self.aura_list[i-1][1] < luck and i > 0) or (self.aura_list[i][1] == 2 or self.aura_list[i][1] == 1):
-                    if is_real_roll:
-                        if not self.roll_info[5]:
-                            visuals.animate_roll(luck, self.aura_list[i][0], True)
-                        self.manage_bonus_roll(True)
-                        self.rolls += 1
-                    return self.aura_list[i]
-
-    def manage_bonus_roll(self, is_real_roll):
-        # If the current roll = the bonus roll number
-        if self.roll_info[2] == self.roll_info[3]:
-            if is_real_roll:
-                self.roll_info[2] = 1
-            return True
-        if is_real_roll:
-            self.roll_info[2] += 1
-        return False
-
-    def manage_luck(self):
-        if self.manage_bonus_roll(False):
-            return self.luck * 2
-        return self.luck
-
-    def manage_buffs(self, add_or_remove, buff):
-        # Effect in this case is referring to something like "1.5L"
-        effect = self.buffs_list[buff][1]
-
-        # True means add, False means remove
-        # L means luck, S means rollspeed, B means rune
-        for e in effect.split(';'):
-            if add_or_remove:
-                if 'L' in e:
-                    self.luck += float(e.split('L')[0])
-                elif 'S' in e:
-                    pass
-                elif 'B' in e and int(e.split('B')[0]) not in self.runes:
-                    self.runes.append(int(e.split('B')[0]))
-                    print(self.runes)
-            else:
-                if 'L' in e:
-                    self.luck -= float(e.split('L')[0])
-                elif 'S' in e:
-                    pass
-                elif 'B' in e:
-                    self.runes.remove(int(e.split('B')[0]))
-
-    def manage_breakthrough(self, aura_bt):
-        # If it is a biome, return the biome bt multiplier
-        if aura_bt == self.biome or (aura_bt < 10 and aura_bt in self.runes):
-            return self.biome_list[aura_bt][3]
-
-        # If it is time, return 10
-        elif aura_bt == self.time or (10 <= aura_bt <= 11 and aura_bt in self.runes):
-            return 10
-
-    def add_buffs(self, item_used):
-        item = self.items_list[item_used]
-
-        # Splits the buffs up, so if there are multiple buffs they will all be handled
-        for t in item[1].split(';'):
-            # If the item needs to randomise a buff (e.g. strange potion)
-            if 'R' in t:
-                buff = int(random.choice(item[1].split('R')[1].split('-')))
-            else:
-                buff = int(t)
-
-            # Checks if the buff is already existing
-            result = self.check_if_buff_is_in_list(buff)
-
-            if result is not None:
-                self.buffs[result][1] += int(item[2].split('S')[0].split('R')[0])
-            else:
-                if 'S' in item[2]:
-                    self.buffs.append([buff, time.time() + int(item[2].split('S')[0].split('R')[0]), 'S'])
-                else:
-                    self.buffs.append([buff, self.rolls + int(item[2].split('S')[0].split('R')[0]), 'R'])
-                self.manage_buffs(True, buff)
-
-    def check_if_buff_is_in_list(self, buff):
-        for b in range(len(self.buffs)):
-            if self.buffs[b][0] == buff:
-                return b
-        return None
+        management, buffs = buffm.add_buffs(self.items_list, 17, self.buffs_list, self.runes, self.buffs, self.rolls)
+        self.manage_buff_effects(management, buffs)
 
     def check_buffs_and_remove(self):
         for b in self.buffs:
             if ('S' in b and b[1] <= time.time()) or ('R' in b and self.rolls >= b[1]):
-                self.manage_buffs(False, b[0])
+                management, buffs = buffm.manage_buffs(self.buffs_list, False, b[0], self.runes)
+                self.manage_buff_effects(management, buffs)
                 self.buffs.remove(b)
+
+    def manage_buff_effects(self, management, buffs):
+        for manage in management:
+            if manage[1] == '+':
+                action = 1
+            else:
+                action = -1
+
+            if manage[0] == 'L':
+                self.luck += action * manage[2]
+            elif manage[0] == 'S':
+                pass
+            elif manage[0] == 'B':
+                if action == 1:
+                    self.runes.append(manage[2])
+                else:
+                    self.runes.remove(manage[2])
+
+        if buffs is not None:
+            self.buffs = buffs
 
     def roll_biome(self):
         if time.time() - self.biome_timer > 0:
@@ -167,20 +85,33 @@ class Model:
                 self.time = 10
                 self.time_timer = time.time() + self.biome_list[self.time][2]
 
-    def check_where_clicked(self, x, y, visuals):
-        if 425 <= x <= 575 and 670 <= y <= 730:
-            rolled = self.roll_aura(self.manage_luck(), visuals)
-            print(rolled)
-        elif 270 <= x <= 400 and 675 <= y <= 730:
+    def check_where_interact(self, x, y, visuals, mode):
+        if 425 <= x <= 575 and 670 <= y <= 730 and mode == 1:
+            self.handle_roll_outputs(rollm.roll_aura(rollm.manage_luck(self.roll_info, self.luck), self.roll_info, self.aura_list, self.biome_list, self.biome, self.time, self.rolls, self.inventory, self.runes, visuals))
+
+        elif 270 <= x <= 400 and 675 <= y <= 730 and mode == 1:
             if self.roll_info[4]:
                 self.roll_info[4] = False
             else:
                 self.roll_info[4] = True
-        elif 600 <= x <= 730 and 675 <= y <= 730:
+        elif 600 <= x <= 730 and 675 <= y <= 730 and mode == 1:
             if self.roll_info[5]:
                 self.roll_info[5] = False
             else:
                 self.roll_info[5] = True
+        if visuals.page == 'inventory':
+            if 385 <= x <= 845 and 245 <= y <= 620:
+                if mode == 1:
+                    visuals.inventory_info[1] = iUIm.get_clicked_inventory_cell((x, y), visuals, self.inventory, visuals.inventory_info[1])
+                elif 4 <= mode <= 5:
+                    visuals.inventory_info[0] += (mode * 2 - 9) * -3
+                    visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.inventory)
+
+    def handle_roll_outputs(self, output):
+        print(output[0])
+        self.roll_info = output[1]
+        self.inventory = output[2]
+        self.rolls = output[3]
 
     def handle_game_tick(self, visuals):
         self.roll_biome()
@@ -188,4 +119,4 @@ class Model:
         self.check_buffs_and_remove()
 
         if self.roll_info[4]:
-            self.roll_aura(self.luck, visuals, True)
+            self.handle_roll_outputs(rollm.roll_aura(rollm.manage_luck(self.roll_info, self.luck), self.roll_info, self.aura_list, self.biome_list, self.biome, self.time, self.rolls, self.inventory, self.runes, visuals))

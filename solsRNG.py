@@ -1,7 +1,7 @@
 import pygame
 from model import Model
 from visuals import Visuals
-from constants import WIDTH, HEIGHT
+from snippets.constants import WIDTH, HEIGHT
 
 pygame.init()
 
@@ -23,8 +23,7 @@ class Controller:
                 if event.type == pygame.QUIT:
                     running = False
                 elif event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 1:
-                        self.model.check_where_clicked(x, y, self.visuals)
+                    self.model.check_where_interact(x, y, self.visuals, event.button)
 
             self.visuals.draw(x, y)
             self.model.handle_game_tick(self.visuals)

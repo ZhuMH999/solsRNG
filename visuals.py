@@ -1,5 +1,8 @@
 import pygame
-from constants import SARPANCHBOLD, ARIAL, BIOME_COLORS, EFFECTS
+from snippets.constants import SARPANCHBOLD, SEGOE_UI_SYMBOL, BIOME_COLORS, EFFECTS, INVENTORY_UI_BOXES, INVENTORY_UI_TEXT, INV_DIMENSIONS, INV_SHOWCASE_SIZE, BUTTONS
+from snippets.inventory_UI_manager import manage_rows_inv, draw_inventory_slot
+from snippets.bg_color_manager import return_interpolated_color
+from snippets.roll_manager import roll_aura
 import time
 
 class Visuals:
@@ -9,54 +12,18 @@ class Visuals:
 
         self.rolling_animation = None
 
+        self.page = 'inventory'
+        self.inventory_info = [0, None]
+
     def initialize_window(self):
-        self.win.fill('black')
+        self.win.fill(return_interpolated_color(self.model.time_timer, self.model.time))
 
     def draw(self, x, y):
-        self.win.fill('black')
-
-        # Roll button
-        pygame.draw.rect(self.win, (100, 100, 100), (425, 670, 150, 60))
-
-        if 425 <= x <= 575 and 670 <= y <= 730:
-            pygame.draw.rect(self.win, (130, 130, 130), (430, 675, 140, 50))
+        self.win.fill(return_interpolated_color(self.model.time_timer, self.model.time))
+        self.manage_buttons(x, y)
 
         if self.model.roll_info[0] - time.time() > 0:
             pygame.draw.rect(self.win, (150, 150, 150), (430, 675, 140*((self.model.roll_info[0] - time.time()) / 3.2), 50))
-
-        self.get_text_widget_and_center((255, 255, 255), 500, 700, SARPANCHBOLD[30], 'Roll')
-
-        # Auto roll button
-        pygame.draw.rect(self.win, (100, 100, 100), (270, 675, 130, 55))
-
-        if 270 <= x <= 400 and 675 <= y <= 730:
-            pygame.draw.rect(self.win, (130, 130, 130), (275, 680, 120, 45))
-
-        self.get_text_widget_and_center((255, 255, 255), 335, 690, SARPANCHBOLD[20], 'Auto Roll')
-
-        if self.model.roll_info[4]:
-            self.get_text_widget_and_center((255, 255, 255), 335, 715, SARPANCHBOLD[20], 'ON')
-        else:
-            self.get_text_widget_and_center((255, 255, 255), 335, 715, SARPANCHBOLD[20], 'OFF')
-
-        # Quick roll button
-        pygame.draw.rect(self.win, (100, 100, 100), (600, 675, 130, 55))
-
-        if 600 <= x <= 730 and 675 <= y <= 730:
-            pygame.draw.rect(self.win, (130, 130, 130), (605, 680, 120, 45))
-
-        self.get_text_widget_and_center((255, 255, 255), 665, 690, SARPANCHBOLD[20], 'Quick Roll')
-
-        if self.model.roll_info[5]:
-            self.get_text_widget_and_center((255, 255, 255), 665, 715, SARPANCHBOLD[20], 'ON')
-        else:
-            self.get_text_widget_and_center((255, 255, 255), 665, 715, SARPANCHBOLD[20], 'OFF')
-
-        # Bonus Roll indicator
-        if self.model.roll_info[2] != self.model.roll_info[3]:
-            self.get_text_widget_and_center((255, 255, 255), 500, 725, SARPANCHBOLD[15], f'{self.model.roll_info[2]} / {self.model.roll_info[3]}')
-        else:
-            self.get_text_widget_and_center((255, 255, 255), 500, 725, SARPANCHBOLD[15], 'x2 Luck Ready')
 
         # Biome and time indicator
         if self.model.biome is None:
@@ -72,32 +39,72 @@ class Visuals:
                 if self.model.buffs[i][2] == 'S':
                     self.get_text_widget_and_center((255, 255, 255), 975, 10 + i*50, SARPANCHBOLD[10], str(round(self.model.buffs[i][1] - time.time())))
             except:
-                print(f'idiot you forgot to add assets for {self.model.buffs[i][0]}')
+                pass
+                #  print(f'idiot you forgot to add assets for buff {self.model.buffs[i][0]}: {self.model.buffs_list[self.model.buffs[i][0]][0]}')
+
+        if self.page == 'inventory':
+            for color, xpos, ypos, w, h in INVENTORY_UI_BOXES:
+                if color == 'inv':
+                    for i in range(len(self.model.inventory)):
+                        x, cell_y, width, height, text_x, text_y = draw_inventory_slot(i, self.inventory_info[0])
+                        pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height))
+
+                        if 230 < text_y < 650:
+                            self.get_text_widget_and_center((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(self.model.aura_list[self.model.inventory[i][0]][0]))
+
+                elif color == 'bg color':
+                    pygame.draw.rect(self.win, return_interpolated_color(self.model.time_timer, self.model.time), (xpos, ypos, w, h))
+                else:
+                    pygame.draw.rect(self.win, color, (xpos, ypos, w, h))
+            for color, xpos, ypos, font, text, pos in INVENTORY_UI_TEXT:
+                if callable(text):
+                    text = text(self.model.inventory, self.inventory_info, self.model.aura_list)
+
+                self.get_text_widget_and_center(color, xpos, ypos, font, text, pos)
+
+            total_height = manage_rows_inv(self.model.inventory) * (INV_DIMENSIONS[1] + 5)
+            pygame.draw.rect(self.win, (140, 140, 140), (830, 250 + 370 * ((self.inventory_info[0] * -1) / total_height), 10, min(365, 365 * (INV_SHOWCASE_SIZE / total_height))))
 
         self.animate_roll()
 
-    def animate_roll(self, luck=None, final_roll=None, start=False):
+    def manage_buttons(self, mousex, mousey):
+        for color, size, active_color, method, labels in BUTTONS:
+            if method == 'rect':
+                pygame.draw.rect(self.win, color, size)
+                big_x_limit = size[2] + size[0]
+                big_y_limit = size[3] + size[1]
+                if size[0] < mousex < big_x_limit and size[1] < mousey < big_y_limit:
+                    pygame.draw.rect(self.win, active_color, (size[0] + 5, size[1] + 5, size[2] - 10, size[3] - 10))
+
+            for text, x, y, font in labels:
+                if callable(text):
+                    text = text(self.model.roll_info)
+                self.get_text_widget_and_center((255, 255, 255), x, y, font, text)
+
+    def animate_roll(self, rolls=None, luck=None, final_roll=None, start=False):
         if self.rolling_animation is None and start:
-            self.rolling_animation = [1, 0, time.time()-100, final_roll, self.model.roll_aura(luck=luck, is_real_roll=False)[0], luck]
+            self.rolling_animation = [1, 0, time.time()-100, final_roll, roll_aura(luck, self.model.roll_info, self.model.aura_list, self.model.biome_list, self.model.biome, self.model.time, self.model.rolls, self.model.inventory, self.model.runes, is_real_roll=False)[0], luck, rolls]
 
         if self.rolling_animation is not None and time.time() - self.rolling_animation[2] >= 0.05:
             if 20 < self.rolling_animation[1] and self.rolling_animation[0] != 7:
                 self.rolling_animation[0] += 1
                 self.rolling_animation[1] = 0
-                self.rolling_animation[4] = self.model.roll_aura(luck=self.rolling_animation[5], is_real_roll=False)[0]
+                self.rolling_animation[4] = roll_aura(self.rolling_animation[5], self.model.roll_info, self.model.aura_list, self.model.biome_list, self.model.biome, self.model.time, self.model.rolls, self.model.inventory, self.model.runes, is_real_roll=False)[0]
 
             if self.rolling_animation[0] == 7:
+                if self.rolling_animation[1] == 20:
+                    self.model.inventory.append([self.rolling_animation[3], self.rolling_animation[5], self.rolling_animation[6]])
                 if 20 <= self.rolling_animation[1] <= 60:
-                    self.get_text_widget_and_center((255, 255, 255), 500, 375, ARIAL[30], self.rolling_animation[3])
+                    self.get_text_widget_and_center((255, 255, 255), 500, 375, SEGOE_UI_SYMBOL[30], self.model.aura_list[self.rolling_animation[3]][0])
                     self.rolling_animation[1] += 1
                 elif self.rolling_animation[1] > 60:
                     self.rolling_animation = None
                 else:
-                    self.get_text_widget_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], ARIAL[30], self.rolling_animation[3])
+                    self.get_text_widget_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.model.aura_list[self.rolling_animation[3]][0])
                     self.rolling_animation[1] += 1
                 return None
 
-            self.get_text_widget_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], ARIAL[30], self.rolling_animation[4])
+            self.get_text_widget_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.rolling_animation[4])
             self.rolling_animation[1] += (8-self.rolling_animation[0])/2
 
     def get_text_widget_and_center(self, rgb, x, y, font, text, pos='center'):
@@ -108,3 +115,9 @@ class Visuals:
         elif pos == 'topleft':
             rect.topleft = (x, y)
         self.win.blit(widget, rect)
+
+    def get_translucent_object_and_draw(self, rgb, x, y, sizex, sizey, transparency):
+        s = pygame.Surface((sizex, sizey))
+        s.set_alpha(transparency)
+        s.fill(rgb)
+        self.win.blit(s, (x, y))

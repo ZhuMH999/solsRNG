@@ -40,7 +40,7 @@ def parse_file(filename, int_or_not=False):
             result.append(converted)
         return result
 
-auras = parse_file('assets/auras.txt')
+auras = parse_file('game_data/auras.txt')
 print(auras)
 
 name = input('Enter glove name > ')
@@ -65,5 +65,5 @@ while True:
     final_aura = final_aura + str(len(new_crafting_aura)) + new_crafting_aura + str(len(aura_num)) + aura_num
 
 
-with open('assets/crafting.txt', 'a') as file:
+with open('game_data/crafting.txt', 'a') as file:
     file.write(f'{name},{final_gear},{final_aura}\n')
