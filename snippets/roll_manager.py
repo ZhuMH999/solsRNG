@@ -1,5 +1,6 @@
 import time as t
 import random
+from datetime import datetime
 
 def roll_aura(luck, roll_info, aura_list, biome_list, biome, time, rolls, inventory, runes, visuals=None, is_real_roll=True):
     if (is_real_roll and t.time() - roll_info[0] > 0) or not is_real_roll:
@@ -30,9 +31,9 @@ def roll_aura(luck, roll_info, aura_list, biome_list, biome, time, rolls, invent
                 if is_real_roll:
                     r += 1
                     if not r_i[5]:
-                        visuals.animate_roll(r, luck, i, True)
+                        visuals.animate_roll(datetime.now(), r, luck, i, True)
                     else:
-                        inventory.append([i, luck, r])
+                        inventory.append([i, luck, r, datetime.now()])
                     r_i = manage_bonus_roll(True, r_i)
                 if is_real_roll:
                     return aura_list[i], r_i, inventory, r
