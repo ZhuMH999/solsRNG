@@ -1,4 +1,32 @@
 import pygame
+import time
+
+def parse_file(filename, int_or_not=False):
+    with open(filename, 'r') as file:
+        result = []
+        for line in file:
+            parts = line.strip().split(',')
+            if len(parts) > 1 and int_or_not:
+                converted = [parts[0]]
+                for x in parts[1:]:
+                    if x:
+                        try:
+                            converted.append(int(x))
+                        except ValueError:
+                            converted.append(x)
+                    else:
+                        converted.append(x)
+            else:
+                converted = parts
+            result.append(converted)
+        return result
+
+
+def get_aura_info(i_i):
+    if 'L' in str(i_i[1][0]):
+        return limbo_aura_list[int(i_i[1][0].split('L')[1].split(',')[0])][0]
+    else:
+        return aura_list[i_i[1][0]][0]
 
 pygame.init()
 pygame.font.init()
@@ -18,6 +46,8 @@ SARPANCHMEDIUM = {15: pygame.font.Font('files/fonts/Sarpanch-Medium.ttf', 15),
 SEGOE_UI_SYMBOL = {30: pygame.font.Font('files/fonts/segoe-ui-symbol.ttf', 30),
                    15: pygame.font.Font('files/fonts/segoe-ui-symbol.ttf', 15)}
 
+ARIAL = {10: pygame.font.SysFont('Arial', 10)}
+
 BIOME_COLORS = [(30, 83, 64),
                 (214, 125, 203),
                 (84, 84, 84),
@@ -32,8 +62,8 @@ BIOME_COLORS = [(30, 83, 64),
                 (197, 133, 255),
                 (67, 67, 67)]
 
-EFFECTS = [pygame.transform.scale(pygame.image.load('files/images/effect0.png'), (50, 50)),
-           pygame.transform.scale(pygame.image.load('files/images/effect1.png'), (50, 50))]
+EFFECTS = pygame.transform.scale(pygame.image.load('files/images/sprite_sheet.png'), (450, 300))
+EFFECT_SIZE = (9, 6, 50)
 
 UI_BOXES = [
     # (color, x, y, w, h)
@@ -53,7 +83,7 @@ UI_BOXES = [
     ('inventory', (255, 255, 255), 155, 276, 225, 3),          # White bar 1
     ('inventory', (255, 255, 255), 155, 491, 225, 3),          # White bar 2
     ('inventory', (255, 255, 255), 160, 320, 200, 3),           # White bar (aura stats)
-    ('inventory', (140, 140, 140), 830, lambda i_i, total_height: 250 + 370 * ((i_i[0] * -1) / total_height), 10, lambda i_i, total_height: min(365, 365 * (INV_SHOWCASE_SIZE / total_height))),  # Scrollbar
+    ('inventory', (140, 140, 140), 830, lambda i_i, total_height: 250 + 370 * ((i_i[0] * -1) / total_height), 10, lambda i_i, total_height: min(365, 365 * (INV_SHOWCASE_SIZE / total_height)))  # Scrollbar
 ]
 
 INV_DIMENSIONS = [7, 405/7]
@@ -61,30 +91,54 @@ INV_SHOWCASE_SIZE = 6 * (INV_DIMENSIONS[1] + 5) - 5
 
 UI_TEXT = [
     ('inventory', (255, 255, 255), 500, 150, SARPANCHBOLD[30], 'Aura Storage', 'center'),
-    ('inventory', (255, 255, 255), 498.75, 190, SARPANCHBOLD[15], lambda inventory, i_i, aura_list: f'Regular [ {len(inventory)} / xxx ]', 'center'),
+    ('inventory', (255, 255, 255), 498.75, 190, SARPANCHBOLD[15], lambda inventory, i_i: f'Regular [ {len(inventory)} / xxx ]', 'center'),
     ('inventory', (255, 255, 255), 731.25, 190, SARPANCHBOLD[15], 'Special', 'center'),
     ('inventory', (255, 255, 255), 160, 290, SARPANCHBOLD[20], '[ Information ]', 'topleft'),
-    ('inventory', (255, 255, 255), 160, 349, SARPANCHMEDIUM[15], lambda inventory, i_i, aura_list: f'With luck of {inventory[i_i[1]][1]}' if i_i[1] is not None else '', 'topleft'),
-    ('inventory', (255, 255, 255), 160, 328, SARPANCHMEDIUM[15], lambda inventory, i_i, aura_list: f'Rolled at: {inventory[i_i[1]][2]} Roll(s)' if i_i[1] is not None else '', 'topleft'),
-    ('inventory', (255, 255, 255), 267.5, 220, SARPANCHBOLD[30], lambda inventory, i_i, aura_list: aura_list[inventory[i_i[1]][0]][0] if i_i[1] is not None else '', 'center'),
-    ('inventory', (255, 255, 255), 160, 370, SARPANCHMEDIUM[12], lambda inventory, i_i, aura_list: f'Time Discovered: {inventory[i_i[1]][3].strftime("%d/%m/%Y %H:%M")}' if i_i[1] is not None else '', 'topleft')
+    ('inventory', (255, 255, 255), 160, 349, SARPANCHMEDIUM[15], lambda inventory, i_i: f'With luck of {i_i[1][1]}' if i_i[1] is not None else '', 'topleft'),
+    ('inventory', (255, 255, 255), 160, 328, SARPANCHMEDIUM[15], lambda inventory, i_i: f'Rolled at: {i_i[1][2]} Roll(s)' if i_i[1] is not None else '', 'topleft'),
+    ('inventory', (255, 255, 255), 267.5, 220, SARPANCHBOLD[30], lambda inventory, i_i: get_aura_info(i_i) if i_i[1] is not None else '', 'center'),
+    ('inventory', (255, 255, 255), 160, 370, SARPANCHMEDIUM[12], lambda inventory, i_i: f'Time Discovered: {i_i[1][3].strftime("%d/%m/%Y %H:%M")}' if i_i[1] is not None else '', 'topleft')
 ]
 
+aura = pygame.transform.scale(pygame.image.load('files/images/aura_button.png'), (50, 50))
+
+# page, color, size, active_color, method, labels, additional_rects
 BUTTONS = [
     ('all', (100, 100, 100), (425, 670, 150, 60), (130, 130, 130), 'rect',
         [['Roll', 500, 700, SARPANCHBOLD[30]],
-         [lambda roll_info: (f"{roll_info[2]} / {roll_info[3]}" if roll_info[2] != roll_info[3] else 'x2 Luck Ready'), 500, 725, SARPANCHBOLD[15]]]),  # Roll button
+         [lambda roll_info: (f"{roll_info[2]} / {roll_info[3]}" if roll_info[2] != roll_info[3] else 'x2 Luck Ready'), 500, 725, SARPANCHBOLD[15]]],
+        [[(150, 150, 150), 430, 675, lambda r_i: 140 * ((r_i - time.time()) / 3.2) if r_i - time.time() > 0 else 0, 50]]),  # Roll button
     ('all', (100, 100, 100), (270, 675, 130, 55), (130, 130, 130), 'rect',
         [['Auto Roll', 335, 690, SARPANCHBOLD[20]],
-         [lambda roll_info: 'ON' if roll_info[4] else 'OFF', 335, 715, SARPANCHBOLD[20]]]),  # Auto roll button
+         [lambda roll_info: 'ON' if roll_info[4] else 'OFF', 335, 715, SARPANCHBOLD[20]]],
+        []),  # Auto roll button
     ('all', (100, 100, 100), (600, 675, 130, 55), (130, 130, 130), 'rect',
         [['Quick Roll', 665, 690, SARPANCHBOLD[20]],
-         [lambda roll_info: 'ON' if roll_info[5] else 'OFF', 665, 715, SARPANCHBOLD[20]]]),   # Quick roll button
+         [lambda roll_info: 'ON' if roll_info[5] else 'OFF', 665, 715, SARPANCHBOLD[20]]],
+        []),   # Quick roll button
     ('inventory', (35, 168, 64), (160, 510, 215, 31.6), (48, 230, 88), 'rect',
-        [['Equip', 267.5, 525.8, SARPANCHBOLD[20]]])
+        [['Equip', 267.5, 525.8, SARPANCHBOLD[20]]],
+        []),
+    ('inventory', (204, 45, 45), (160, 546.6, 215, 31.6), (235, 28, 28), 'rect',
+        [['Remove', 267.5, 562.4, SARPANCHBOLD[20]]],
+        []),
+    ('inventory', (150, 150, 150), (160, 584.2, 215, 31.6), (160, 160, 160), 'rect',
+        [['Lock', 267.5, 600, SARPANCHBOLD[20]]],
+        []),
+    ('all', aura, (0, 200, 50, 50), None, 'img', [],
+        [[(130, 130, 130), 0, 200, 50, 50]]),
+    ('inventory', (150, 150, 150), (810, 135, 30, 30), (160, 160, 160), 'rect',
+        [['X', 825, 150, SARPANCHBOLD[20]]],
+        [])
 ]
 
+STARS = [pygame.image.load('files/images/1mstar.png')]
 
+aura_list = parse_file("files/game_data_raw/auras.txt", True)
+limbo_aura_list = parse_file('files/game_data_raw/auras_limbo.txt', True)
+biome_list = parse_file("files/game_data_raw/biomes.txt", True)
+items_list = parse_file("files/game_data_raw/items.txt")
+buffs_list = parse_file("files/game_data_raw/buffs.txt")
 
 '''
 0: Glitched

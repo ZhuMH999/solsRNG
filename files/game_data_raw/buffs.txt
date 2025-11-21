@@ -1,0 +1,47 @@
+Lucky,0.25L
+Quick Roll,0.1S
+Fortune I,0.5L
+Fortune II,0.75L
+Fortune III,1L
+Haste I,0.2S
+Haste II,0.25S
+Haste III,0.3S
+Oblivion,600000L
+Lucky Penny,0.77L;0.07R
+Warmth?,0.2L
+Incense,0.2L
+Tracking the location...,0.5L
+The Chosen,1.5L;0.3R
+The Power I,1.5L
+The Knowledge I,0.3R
+The Wrath I,-0.5L
+The Sloth I,-0.15S
+GODLIKE,2.5L;0.4S
+The Power II,2.5L
+The Knowledge II,0.4R
+The Wrath II,-1L
+The Sloth II,-0.25R
+Skip,10R
+Skip+,10R
+Brilliant,1.2L
+Undying,1.5L
+Raged,0.35R
+Dived,0.4R
+Binding,50000L
+Lord of the Sky,2L;0.3R
+Lord of the Sea,-0.50L;0.75R
+Lord of the Hell,+3L;-0.1R
+Deification,400000L
+Shattered Heart,300000L
+Warrior,1L
+Heavenly,150000L
+Rune of Wind,9B
+Rune of Frost,8B
+Rune of Rainstorm,7B
+Rune of Dust,6B
+Rune of Hell,5B
+Rune of Galaxy,4B
+Rune of Corruption,3B
+Rune of Nothing,2B
+Rune of Eclipse,10B;11B
+Rune of Everything,9B;8B;7B;6B;5B;4B;3B;2B

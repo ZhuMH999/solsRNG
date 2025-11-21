@@ -1,0 +1,11 @@
+dreamscape,850000000,5,1
+PROLOGUE,666616111,8,1
+Elude,555555555,10,1
+⍰ unknown ⍰,444444444,14,1
+{J U X T A P O S I T I O N},40440400,46,1
+Anima,5730000,71,1
+Raven,500000,93,1
+[ Nihility ],9000,60
+Shift lock,3325,79
+Undefined,1111,87
+Nothing,1,162,1

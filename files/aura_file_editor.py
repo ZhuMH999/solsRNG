@@ -1,6 +1,6 @@
 run = True
 
-with open('game_data/auras.txt', 'r') as file:
+with open('game_data_raw/auras.txt', 'r') as file:
     auras = [line.strip().split(',') for line in file]
 
 while run:
@@ -18,6 +18,6 @@ while run:
 
 print(auras)
 if input('Is this correct? (y/n) >') == 'y':
-    with open('game_data/auras.txt', 'w') as file:
+    with open('game_data_raw/auras.txt', 'w') as file:
         for j in range(len(auras)):
             file.write(','.join(auras[j]) + '\n')

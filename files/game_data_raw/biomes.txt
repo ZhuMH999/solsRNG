@@ -1,0 +1,13 @@
+Glitched,30000,164,1
+Dreamspace,5000000,128
+Null,10100,99,1000
+Corruption,9000,660,5
+Starfall,7500,600,5
+Hell,6666,660,6
+Sandstorm,3000,660,4
+Rainy,750,120,4
+Snowy,600,120,3
+Windy,500,120,3
+Daytime,1,150,10
+Nighttime,1,150,10
+The Limbo,1,1,1

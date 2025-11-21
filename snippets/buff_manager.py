@@ -1,7 +1,8 @@
 import time
 import random
+from snippets.constants import buffs_list, items_list
 
-def manage_buffs(buffs_list, add_or_remove, buff, runes):
+def manage_buffs(add_or_remove, buff, runes):
     # Effect in this case is referring to something like "1.5L"
     effect = buffs_list[buff][1]
     management = []
@@ -26,7 +27,7 @@ def manage_buffs(buffs_list, add_or_remove, buff, runes):
                 management.append(['B', '-', int(e.split('B')[0])])
     return management, None
 
-def add_buffs(items_list, item_used, buffs_list, runes, buffs, rolls):
+def add_buffs(item_used, runes, buffs, rolls):
     item = items_list[item_used]
     management = []
 
@@ -49,7 +50,7 @@ def add_buffs(items_list, item_used, buffs_list, runes, buffs, rolls):
                 buffs.append([buff, time.time() + int(item[2].split('S')[0].split('R')[0]), 'S'])
             else:  # Add based on rolls
                 buffs.append([buff, rolls + int(item[2].split('S')[0].split('R')[0]), 'R'])
-            manage, _ = manage_buffs(buffs_list, True, buff, runes)
+            manage, _ = manage_buffs(True, buff, runes)
             management.extend(manage)
     return management, buffs
 
