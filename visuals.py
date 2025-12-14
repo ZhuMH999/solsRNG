@@ -6,10 +6,13 @@ from snippets.roll_manager import roll_aura, add_aura_to_inv
 from snippets.sprite_sheet_manager import split_sprites
 import time
 
+pygame.init()
+
 class Visuals:
-    def __init__(self, win, model):
+    def __init__(self, win, model, clock):
         self.win = win
         self.model = model
+        self.clock = clock
 
         self.rolling_animation = None
         self.cutscene_animation = None
@@ -73,13 +76,13 @@ class Visuals:
 
                 for text, x, y, font in labels:
                     if callable(text):
-                        text = text(self.model.roll_info)
+                        text = text(self.model.roll_info, self.model.inventory)
                     self.get_text_widget_scale_and_center((255, 255, 255), x, y, font, text, 1)
 
     def manage_UI_text_and_boxes(self):
         for page, color, xpos, ypos, w, h in UI_BOXES:
             if self.page in page or page == 'all':
-                if 'inventory' in page and color == 'inv':
+                if color == 'inv' or color == 'gears':
                     for i in range(len(self.model.inventory)):
                         x, cell_y, width, height, text_x, text_y = draw_inventory_slot(i, self.inventory_info[0])
                         pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height))
@@ -143,28 +146,27 @@ class Visuals:
                 self.get_text_widget_scale_and_center((0, 0, 0), 502, 357 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.rolling_animation[4], 1)
                 self.get_text_widget_scale_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.rolling_animation[4], 1)
 
-            if time.time() - self.rolling_animation[2] >= 0.015:
+            if time.time() - self.rolling_animation[2] >= 0:
                 self.rolling_animation[2] = time.time()
                 self.manage_rolling_animation_cycle()
 
     def manage_rolling_animation_cycle(self):
         if 20 < self.rolling_animation[1] and self.rolling_animation[0] != 7:
-            self.rolling_animation[4] = roll_aura(self.rolling_animation[5], self.model.roll_info, self.model.biome, self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0]
+            self.rolling_animation[4] = roll_aura(self.rolling_animation[5], self.model.roll_info, self.rolling_animation[8], self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0]
             self.rolling_animation[0] += 1
             self.rolling_animation[1] = 0
         elif self.rolling_animation[0] == 7:
-            if self.rolling_animation[1] == 20:
+            if self.rolling_animation[1] > 60:
                 if self.rolling_animation[8] == 12:
                     aura_rolled = limbo_aura_list[self.rolling_animation[3]]
                 else:
                     aura_rolled = None
                 add_aura_to_inv(self.rolling_animation[8], aura_rolled, self.model.inventory, self.rolling_animation[5], self.rolling_animation[6], self.rolling_animation[3], self.rolling_animation[7])
-            elif self.rolling_animation[1] > 60:
                 self.rolling_animation = None
                 return None
-            self.rolling_animation[1] += 1
+            self.rolling_animation[1] += 2.5 * (self.clock.tick() / 15)
         else:
-            self.rolling_animation[1] += (8 - self.rolling_animation[0]) / 2
+            self.rolling_animation[1] += (10 - self.rolling_animation[0]) * (self.clock.tick() / 15)
 
     def manage_cutscenes(self, rolled_aura=None, start=False):
         if self.cutscene_animation is None and start:

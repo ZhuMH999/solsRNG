@@ -22,11 +22,11 @@ def parse_file(filename, int_or_not=False):
         return result
 
 
-def get_aura_info(i_i):
+def get_aura_info(i_i, t):
     if 'L' in str(i_i[1][0]):
-        return limbo_aura_list[int(i_i[1][0].split('L')[1].split(',')[0])][0]
+        return limbo_aura_list[int(i_i[1][0].split('L')[1].split(',')[0])][t]
     else:
-        return aura_list[i_i[1][0]][0]
+        return aura_list[i_i[1][0]][t]
 
 pygame.init()
 pygame.font.init()
@@ -67,16 +67,16 @@ EFFECT_SIZE = (9, 6, 50)
 
 UI_BOXES = [
     # (color, x, y, w, h)
-    (['inventory', 'items'], (100, 100, 100), 150, 125, 700, 500),        # Entire aura and item background
-    ('inventory', (110, 110, 110), 385, 245, 460, 375),        # aura background
+    (['inventory', 'items-gears', 'items-items'], (100, 100, 100), 150, 125, 700, 500),        # Entire aura and item background
+    (['inventory', 'items-gears', 'items-items'], (110, 110, 110), 385, 245, 460, 375),        # aura background
     ('inventory', 'inv', None, None, None, None),              # Draw the inventory before proceeding
+    ('items-gears', 'gears', None, None, None, None),
     ('inventory', (100, 100, 100), 385, 240, 460, 5),          # Bit to hide the text (top)
     ('inventory', (100, 100, 100), 385, 620, 460, 5),          # Bit to hide the text (bottom)
     ('inventory', 'bg color', 385, 625, 460, 45),              # Bit to hide the text (bottom pt 2)
-    ('inventory', (130, 130, 130), 155, 130, 690, 40),         # Aura Storage
-    ('inventory', (130, 130, 130), 385, 175, 227.5, 30),       # Regular
-    ('inventory', (130, 130, 130), 617.5, 175, 227.5, 30),     # Special
-    ('inventory', (130, 130, 130), 385, 210, 460, 30),         # Search bar
+    (['inventory', 'items-gears', 'items-items'], (130, 130, 130), 155, 130, 690, 40),         # Aura Storage
+    (['inventory', 'items-gears', 'items-items'], (130, 130, 130), 617.5, 175, 227.5, 30),     # Special
+    (['inventory', 'items-gears', 'items-items'], (130, 130, 130), 385, 210, 460, 30),         # Search bar
     ('inventory', (130, 130, 130), 155, 175, 225, 90),         # Aura name
     ('inventory', (130, 130, 130), 155, 290, 225, 190),        # Aura stats
     ('inventory', (130, 130, 130), 155, 505, 225, 115),        # Aura buttons
@@ -91,13 +91,13 @@ INV_SHOWCASE_SIZE = 6 * (INV_DIMENSIONS[1] + 5) - 5
 
 UI_TEXT = [
     ('inventory', (255, 255, 255), 500, 150, SARPANCHBOLD[30], 'Aura Storage', 'center'),
-    ('inventory', (255, 255, 255), 498.75, 190, SARPANCHBOLD[15], lambda inventory, i_i: f'Regular [ {len(inventory)} / xxx ]', 'center'),
-    ('inventory', (255, 255, 255), 731.25, 190, SARPANCHBOLD[15], 'Special', 'center'),
     ('inventory', (255, 255, 255), 160, 290, SARPANCHBOLD[20], '[ Information ]', 'topleft'),
     ('inventory', (255, 255, 255), 160, 349, SARPANCHMEDIUM[15], lambda inventory, i_i: f'With luck of {i_i[1][1]}' if i_i[1] is not None else '', 'topleft'),
     ('inventory', (255, 255, 255), 160, 328, SARPANCHMEDIUM[15], lambda inventory, i_i: f'Rolled at: {i_i[1][2]} Roll(s)' if i_i[1] is not None else '', 'topleft'),
-    ('inventory', (255, 255, 255), 267.5, 220, SARPANCHBOLD[30], lambda inventory, i_i: get_aura_info(i_i) if i_i[1] is not None else '', 'center'),
-    ('inventory', (255, 255, 255), 160, 370, SARPANCHMEDIUM[12], lambda inventory, i_i: f'Time Discovered: {i_i[1][3].strftime("%d/%m/%Y %H:%M")}' if i_i[1] is not None else '', 'topleft')
+    ('inventory', (255, 255, 255), 267.5, 213, SARPANCHBOLD[30], lambda inventory, i_i: get_aura_info(i_i, 0) if i_i[1] is not None else '', 'center'),
+    ('inventory', (255, 255, 255), 267.5, 242, SARPANCHBOLD[15], lambda inventory, i_i: f'1 in {get_aura_info(i_i, 1):,}' if i_i[1] is not None else '', 'center'),
+    ('inventory', (255, 255, 255), 160, 370, SARPANCHMEDIUM[12], lambda inventory, i_i: f'Time Discovered: {i_i[1][3].strftime("%d/%m/%Y %H:%M")}' if i_i[1] is not None else '', 'topleft'),
+    (['items-gears', 'items-items'], (255, 255, 255), 500, 150, SARPANCHBOLD[30], 'Inventory', 'center')
 ]
 
 aura = pygame.transform.scale(pygame.image.load('files/images/aura_button.png'), (50, 50))
@@ -106,15 +106,15 @@ aura = pygame.transform.scale(pygame.image.load('files/images/aura_button.png'),
 BUTTONS = [
     ('all', (100, 100, 100), (425, 670, 150, 60), (130, 130, 130), 'rect',
         [['Roll', 500, 700, SARPANCHBOLD[30]],
-         [lambda roll_info: (f"{roll_info[2]} / {roll_info[3]}" if roll_info[2] != roll_info[3] else 'x2 Luck Ready'), 500, 725, SARPANCHBOLD[15]]],
+         [lambda roll_info, inv: (f"{roll_info[2]} / {roll_info[3]}" if roll_info[2] != roll_info[3] else 'x2 Luck Ready'), 500, 725, SARPANCHBOLD[15]]],
         [[(150, 150, 150), 430, 675, lambda r_i: 140 * ((r_i - time.time()) / 3.2) if r_i - time.time() > 0 else 0, 50]]),  # Roll button
     ('all', (100, 100, 100), (270, 675, 130, 55), (130, 130, 130), 'rect',
         [['Auto Roll', 335, 690, SARPANCHBOLD[20]],
-         [lambda roll_info: 'ON' if roll_info[4] else 'OFF', 335, 715, SARPANCHBOLD[20]]],
+         [lambda roll_info, inv: 'ON' if roll_info[4] else 'OFF', 335, 715, SARPANCHBOLD[20]]],
         []),  # Auto roll button
     ('all', (100, 100, 100), (600, 675, 130, 55), (130, 130, 130), 'rect',
         [['Quick Roll', 665, 690, SARPANCHBOLD[20]],
-         [lambda roll_info: 'ON' if roll_info[5] else 'OFF', 665, 715, SARPANCHBOLD[20]]],
+         [lambda roll_info, inv: 'ON' if roll_info[5] else 'OFF', 665, 715, SARPANCHBOLD[20]]],
         []),   # Quick roll button
     ('inventory', (35, 168, 64), (160, 510, 215, 31.6), (48, 230, 88), 'rect',
         [['Equip', 267.5, 525.8, SARPANCHBOLD[20]]],
@@ -129,6 +129,18 @@ BUTTONS = [
         [[(130, 130, 130), 0, 200, 50, 50]]),
     ('inventory', (150, 150, 150), (810, 135, 30, 30), (160, 160, 160), 'rect',
         [['X', 825, 150, SARPANCHBOLD[20]]],
+        []),
+    ('inventory', (130, 130, 130), (385, 175, 227.5, 30), (140, 140, 140), 'rect',
+        [[lambda r_i, inv: f'Regular [ {len(inv)} / xxx ]', 498.75, 190, SARPANCHBOLD[15]]],
+        []),
+    ('inventory', (130, 130, 130), (617.5, 175, 227.5, 30), (140, 140, 140), 'rect',
+        [['Special', 731.25, 190, SARPANCHBOLD[15]]],
+        []),
+    (['items-gears', 'items-items'], (130, 130, 130), (385, 175, 227.5, 30), (140, 140, 140), 'rect',
+        [['Gears', 498.75, 190, SARPANCHBOLD[15]]],
+        []),
+    (['items-gears', 'items-items'], (130, 130, 130), (617.5, 175, 227.5, 30), (140, 140, 140), 'rect',
+        [['Items', 731.25, 190, SARPANCHBOLD[15]]],
         [])
 ]
 

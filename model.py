@@ -9,9 +9,9 @@ class Model:
     def __init__(self):
         self.rolls = 0
         self.time = 10
-        self.biome = 12
+        self.biome = None
         self.runes = []
-        self.biome_timer = time.time() + 5
+        self.biome_timer = time.time()
         self.time_timer = time.time() + 30
         self.luck = 1
         self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]

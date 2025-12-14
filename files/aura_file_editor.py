@@ -12,6 +12,8 @@ while run:
     rarity_new_aura = int(new_aura[1])
 
     for i in range(len(auras)):
+        if i == 0 or i == 1:
+            continue
         if int(auras[i][1]) < rarity_new_aura:
             auras.insert(i, new_aura)
             break
