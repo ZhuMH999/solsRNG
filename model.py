@@ -17,6 +17,7 @@ class Model:
         self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]
 
         self.inventory = []
+        self.items_inventory = [i for i in range(57)]
         self.buffs = []
         for i in range(43):
             for j in range(2):
@@ -76,21 +77,28 @@ class Model:
                 self.time_timer = time.time() + biome_list[self.time][2]
 
     def check_where_interact(self, x, y, visuals, mode):
-        if 425 <= x <= 575 and 670 <= y <= 730 and mode == 1:
-            self.handle_roll_outputs(rollm.roll_aura(rollm.manage_luck(self.roll_info, self.luck), self.roll_info, self.biome, self.time, self.rolls, self.inventory, self.runes, aura_list, limbo_aura_list, biome_list, self.buffs, visuals))
+        if visuals.page != 'title_screen':
+            if 425 <= x <= 575 and 670 <= y <= 730 and mode == 1:
+                self.handle_roll_outputs(rollm.roll_aura(rollm.manage_luck(self.roll_info, self.luck), self.roll_info, self.biome, self.time, self.rolls, self.inventory, self.runes, aura_list, limbo_aura_list, biome_list, self.buffs, visuals))
 
-        elif 270 <= x <= 400 and 675 <= y <= 730 and mode == 1:
-            if self.roll_info[4]:
-                self.roll_info[4] = False
-            else:
-                self.roll_info[4] = True
-        elif 600 <= x <= 730 and 675 <= y <= 730 and mode == 1:
-            if self.roll_info[5]:
-                self.roll_info[5] = False
-            else:
-                self.roll_info[5] = True
-        elif 0 <= x <= 50 and 200 <= y <= 250:
-            visuals.page = 'inventory'
+            elif 270 <= x <= 400 and 675 <= y <= 730 and mode == 1:
+                if self.roll_info[4]:
+                    self.roll_info[4] = False
+                else:
+                    self.roll_info[4] = True
+            elif 600 <= x <= 730 and 675 <= y <= 730 and mode == 1:
+                if self.roll_info[5]:
+                    self.roll_info[5] = False
+                else:
+                    self.roll_info[5] = True
+            elif 5 <= x <= 55 and 200 <= y <= 250:
+                visuals.inventory_info[0] = 0
+                visuals.inventory_info[1] = None
+                visuals.page = 'inventory'
+            elif 5 <= x <= 55 and 255 <= y <= 305:
+                visuals.inventory_info[0] = 0
+                visuals.inventory_info[1] = None
+                visuals.page = 'items-items'
 
         if visuals.page == 'inventory':
             if 385 <= x <= 845 and 245 <= y <= 620:
@@ -105,6 +113,16 @@ class Model:
                     visuals.inventory_info[0] += (mode * 2 - 9) * -3
                     visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.inventory)
             elif 810 <= x <= 840 and 135 <= y <= 165:
+                visuals.page = 'main'
+
+        if visuals.page == 'items-items':
+            if 385 <= x <= 845 and 245 <= y <= 620:
+                if 4 <= mode <= 5:
+                    visuals.inventory_info[0] += (mode * 2 - 9) * -3
+                    visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.items_inventory, True)
+
+        if visuals.page == 'title_screen':
+            if 425 <= x <= 575 and 520 <= y <= 580:
                 visuals.page = 'main'
 
     def handle_roll_outputs(self, output):

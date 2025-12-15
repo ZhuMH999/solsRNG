@@ -1,57 +1,57 @@
-Lucky Potion,0,60S
-Speed Potion,1,60S
-Lucky Potion L,0,300S
-Lucky Potion XL,0,600S
-Speed Potion L,1,300S
-Speed Potion XL,1,600S
-Fortune Spoid I,2,60S,1
-Fortune Spoid II,3,60S,1
-Fortune Spoid III,4,60S,1
-Fortune Potion I,2,300S,1
-Fortune Potion II,3,300S,1
-Fortune Potion III,4,300S,1
-Huge Fortune Potion I,2,3600S,1
-Haste Potion I,5,300S,1
-Haste Potion II,6,300S,1
-Haste Potion III,7,300S,1
-Potion of Bound,29,1R
-Heavenly Potion,36,1R
-Rage Potion,27,600S,2
-Diver Potion,28,600S,2
-Jewelry Potion,25,600S,3
-Zombie Potion,26,600S,3
-Godly Potion (Zeus),30,14400S,4
-Godly Potion (Poseidon),31,14400S,4
-Godly Potion (Hades),32,14400S,4
-Godlike Potion,33,1R
-Mixed Potion,0;1,180S
-Strange Potion I,R13-14-15-16-17,600S,5
-Strange Potion II,R18-19-20-21-22,600S,5
-Oblivion Potion,8,1R
-Warp Potion,23,2000R
-Transcendent Potion,24,20000R
-Gladiator Potion,35,900S
-Rune of Wind,37,600S,6
-Rune of Frost,38,600S,6
-Rune of Rainstorm,39,600S,6
-Rune of Dust,40,600S,6
-Rune of Hell,41,600S,6
-Rune of Galaxy,42,600S,6
-Rune of Corruption,43,600S,6
-Rune of Nothing,44,600S,6
-Rune of Eclipse,45,600S,6
-Rune of Everything,46,300S,6
-Void Coin
-Lucky Penny,9,600SC0.05
-Gear A
-Gear B
-Stella's Star
-Empty Bottle
-Wind Essence
-Icicle
-Rainy Bottle
-Eternal Flame
-Piece of Star
-Curruptaine
-NULL?
-Hour Glass
+Lucky Potion,0,60S,Potion
+Speed Potion,1,60S,Potion
+Lucky Potion L,0,300S,Potion
+Lucky Potion XL,0,600S,Potion
+Speed Potion L,1,300S,Potion
+Speed Potion XL,1,600S,Potion
+Fortune Spoid I,2,60S,Potion
+Fortune Spoid II,3,60S,Potion
+Fortune Spoid III,4,60S,Potion
+Fortune Potion I,2,300S,Potion
+Fortune Potion II,3,300S,Potion
+Fortune Potion III,4,300S,Potion
+Huge Fortune Potion I,2,3600S,Potion
+Haste Potion I,5,300S,Potion
+Haste Potion II,6,300S,Potion
+Haste Potion III,7,300S,Potion
+Potion of Bound,29,1R,Potion
+Heavenly Potion,36,1R,Potion
+Rage Potion,27,600S,Potion
+Diver Potion,28,600S,Potion
+Jewelry Potion,25,600S,Potion
+Zombie Potion,26,600S,Potion
+Godly Potion (Zeus),30,14400S,Potion
+Godly Potion (Poseidon),31,14400S,Potion
+Godly Potion (Hades),32,14400S,Potion
+Godlike Potion,33,1R,Potion
+Mixed Potion,0;1,180S,Potion
+Strange Potion I,R13-14-15-16-17,600S,Potion
+Strange Potion II,R18-19-20-21-22,600S,Potion
+Oblivion Potion,8,1R,Potion
+Warp Potion,23,2000R,Potion
+Transcendent Potion,24,20000R,Potion
+Gladiator Potion,35,900S,Potion
+Rune of Wind,37,600S,Rune
+Rune of Frost,38,600S,Rune
+Rune of Rainstorm,39,600S,Rune
+Rune of Dust,40,600S,Rune
+Rune of Hell,41,600S,Rune
+Rune of Galaxy,42,600S,Rune
+Rune of Corruption,43,600S,Rune
+Rune of Nothing,44,600S,Rune
+Rune of Eclipse,45,600S,Rune
+Rune of Everything,46,300S,Rune
+Void Coin,Misc
+Lucky Penny,9,600SC0.05,Misc
+Gear A,Material
+Gear B,Material
+Stella's Star,Material
+Empty Bottle,Misc
+Wind Essence,Material
+Icicle,Material
+Rainy Bottle,Material
+Eternal Flame,Material
+Piece of Star,Material
+Curruptaine,Material
+NULL?,Material
+Hour Glass,Material
