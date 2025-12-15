@@ -1,5 +1,5 @@
 import pygame
-from snippets.constants import SARPANCHBOLD, SEGOE_UI_SYMBOL, ARIAL, BIOME_COLORS, UI_BOXES, UI_TEXT, INV_DIMENSIONS, BUTTONS, STARS, biome_list, aura_list, limbo_aura_list, buffs_list
+from snippets.constants import SARPANCHBOLD, SEGOE_UI_SYMBOL, ARIAL, BIOME_COLORS, UI_BOXES, UI_TEXT, INV_DIMENSIONS, BUTTONS, STARS, ROLL_DISTRIBUTION, biome_list, aura_list, limbo_aura_list, buffs_list
 from snippets.inventory_UI_manager import manage_rows_inv, draw_inventory_slot
 from snippets.bg_color_manager import return_interpolated_color
 from snippets.roll_manager import roll_aura, add_aura_to_inv
@@ -124,49 +124,50 @@ class Visuals:
 
     def animate_roll(self, biome=None, t=None, rolls=None, luck=None, final_roll=None, start=False):
         if self.rolling_animation is None and start:
-            self.rolling_animation = [1, 0, time.time()-100, final_roll, roll_aura(luck, self.model.roll_info, self.model.biome, self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0], luck, rolls, t, biome]
+            self.rolling_animation = {'t_cycle': 0,
+                                      'current_t_cycle_start': time.perf_counter(),
+                                      'total_roll_time': 2,
+                                      'final_r': final_roll,
+                                      'text': roll_aura(luck, self.model.roll_info, self.model.biome, self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0],
+                                      'luck': luck,
+                                      'rolls': rolls,
+                                      't': t,
+                                      'biome': biome}
 
-        if self.rolling_animation is not None:
-            if self.rolling_animation[0] == 7:
-                if 20 <= self.rolling_animation[1]:
-                    if self.rolling_animation[8] == 12:
-                        self.get_text_widget_scale_and_center((0, 0, 0), 502, 377, SEGOE_UI_SYMBOL[30], limbo_aura_list[self.rolling_animation[3]][0], 1)
-                        self.get_text_widget_scale_and_center((255, 255, 255), 500, 375, SEGOE_UI_SYMBOL[30], limbo_aura_list[self.rolling_animation[3]][0], 1)
-                    else:
-                        self.get_text_widget_scale_and_center((0, 0, 0), 502, 377, SEGOE_UI_SYMBOL[30], aura_list[self.rolling_animation[3]][0], 1)
-                        self.get_text_widget_scale_and_center((255, 255, 255), 500, 375, SEGOE_UI_SYMBOL[30], aura_list[self.rolling_animation[3]][0], 1)
-                elif self.rolling_animation[1] < 20:
-                    if self.rolling_animation[8] == 12:
-                        self.get_text_widget_scale_and_center((0, 0, 0), 502, 357 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], limbo_aura_list[self.rolling_animation[3]][0], 1)
-                        self.get_text_widget_scale_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], limbo_aura_list[self.rolling_animation[3]][0], 1)
-                    else:
-                        self.get_text_widget_scale_and_center((0, 0, 0), 502, 357 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], aura_list[self.rolling_animation[3]][0], 1)
-                        self.get_text_widget_scale_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], aura_list[self.rolling_animation[3]][0], 1)
-            else:
-                self.get_text_widget_scale_and_center((0, 0, 0), 502, 357 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.rolling_animation[4], 1)
-                self.get_text_widget_scale_and_center((255, 255, 255), 500, 355 + self.rolling_animation[1], SEGOE_UI_SYMBOL[30], self.rolling_animation[4], 1)
+        if self.rolling_animation is None:
+            return
 
-            if time.time() - self.rolling_animation[2] >= 0:
-                self.rolling_animation[2] = time.time()
-                self.manage_rolling_animation_cycle()
+        now = time.perf_counter()
+        elapsed_time_current_cycle = now - self.rolling_animation['current_t_cycle_start']
+        current_cycle_total_t = ROLL_DISTRIBUTION[self.rolling_animation['t_cycle']] * self.rolling_animation['total_roll_time']
 
-    def manage_rolling_animation_cycle(self):
-        if 20 < self.rolling_animation[1] and self.rolling_animation[0] != 7:
-            self.rolling_animation[4] = roll_aura(self.rolling_animation[5], self.model.roll_info, self.rolling_animation[8], self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0]
-            self.rolling_animation[0] += 1
-            self.rolling_animation[1] = 0
-        elif self.rolling_animation[0] == 7:
-            if self.rolling_animation[1] > 60:
-                if self.rolling_animation[8] == 12:
-                    aura_rolled = limbo_aura_list[self.rolling_animation[3]]
+        if elapsed_time_current_cycle >= current_cycle_total_t:
+            self.rolling_animation['t_cycle'] += 1
+            self.rolling_animation['current_t_cycle_start'] = now
+
+            if self.rolling_animation['t_cycle'] >= 7:
+                if self.rolling_animation['biome'] == 12:
+                    aura_rolled = limbo_aura_list[self.rolling_animation['final_r']]
                 else:
                     aura_rolled = None
-                add_aura_to_inv(self.rolling_animation[8], aura_rolled, self.model.inventory, self.rolling_animation[5], self.rolling_animation[6], self.rolling_animation[3], self.rolling_animation[7])
+                add_aura_to_inv(self.rolling_animation['biome'], aura_rolled, self.model.inventory, self.rolling_animation['luck'],
+                                self.rolling_animation['rolls'], self.rolling_animation['final_r'], self.rolling_animation['t'])
                 self.rolling_animation = None
-                return None
-            self.rolling_animation[1] += 2.5 * (self.clock.tick() / 15)
-        else:
-            self.rolling_animation[1] += (10 - self.rolling_animation[0]) * (self.clock.tick() / 15)
+                return
+
+            if self.rolling_animation['t_cycle'] < 6:
+                self.rolling_animation['text'] = roll_aura(self.rolling_animation['luck'], self.model.roll_info, self.rolling_animation['biome'], self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0]
+            else:
+                if self.rolling_animation['biome'] == 12:
+                    self.rolling_animation['text'] = limbo_aura_list[self.rolling_animation['final_r']][0]
+                else:
+                    self.rolling_animation['text'] = aura_list[self.rolling_animation['final_r']][0]
+
+        current_pos_percent = elapsed_time_current_cycle / current_cycle_total_t
+        y = 355 + current_pos_percent * 20
+
+        self.get_text_widget_scale_and_center((0, 0, 0), 502, y+2, SEGOE_UI_SYMBOL[30], self.rolling_animation['text'], 1)
+        self.get_text_widget_scale_and_center((255, 255, 255), 500, y, SEGOE_UI_SYMBOL[30], self.rolling_animation['text'], 1)
 
     def manage_cutscenes(self, rolled_aura=None, start=False):
         if self.cutscene_animation is None and start:

@@ -152,6 +152,8 @@ biome_list = parse_file("files/game_data_raw/biomes.txt", True)
 items_list = parse_file("files/game_data_raw/items.txt")
 buffs_list = parse_file("files/game_data_raw/buffs.txt")
 
+ROLL_DISTRIBUTION = [1/16, 1/14, 1/12, 1/9, 1/7, 1/5, 1/3]
+
 '''
 0: Glitched
 1: Dreamspace
