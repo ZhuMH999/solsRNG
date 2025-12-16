@@ -1,34 +1,30 @@
 from snippets.constants import INV_DIMENSIONS, INV_SHOWCASE_SIZE, items_list, ITEMS_DIMENSIONS
 
-def get_clicked_inventory_cell(mouse_pos, visuals, inventory, current_selected):
-    number_of_cells = INV_DIMENSIONS[0]
-    width = INV_DIMENSIONS[1]
-
+def get_clicked_inventory_cell(mouse_pos, visuals, inventory, current_selected, dimensions, group_by_type=False):
     mouse_x, mouse_y = mouse_pos
+    add_y = 0
+
+    if group_by_type:
+        items_sorted = sorted(inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]))
+        current_type = None
+        j = 0
 
     for i in range(len(inventory)):
+        if group_by_type and items_list[items_sorted[i]][-1] != current_type:
+            add_y += (ITEMS_DIMENSIONS[1] + 5) * ((j + 5) // ITEMS_DIMENSIONS[0])
+            current_type = items_list[items_sorted[i]][-1]
+            add_y += 40
+            j = 0
+
         # Compute cell position
-        x_offset = (width + 5) * (i % number_of_cells)
-        y_offset = (width + 5) * (i // number_of_cells)
-
-        x = 390 + x_offset
-        cell_y = 250 + visuals.inventory_info[0] + y_offset
-
-        # Shrink cell if it's above/below bounds
-        if cell_y < 245:
-            height = width - (245 - cell_y)
-            cell_y = 245
-            if height < 0:
-                height = 0
-        elif cell_y > 562.5:
-            height = width - (cell_y - 562.5)
-            if height < 0:
-                height = 0
-        else:
-            height = width
+        x, cell_y, width, height, _, _ = draw_inventory_slot(j if group_by_type else i, visuals.inventory_info[0], dimensions, add_y)
+        if group_by_type:
+            j += 1
 
         # Check if mouse is inside this cell
         if x <= mouse_x <= x + width and cell_y <= mouse_y <= cell_y + height:
+            if group_by_type:
+                return items_sorted[i]
             return i  # Return the index of the clicked cell
     return current_selected
 
@@ -76,8 +72,7 @@ def manage_height_inv(inventory, group_by_type=False):
     j = 0
 
     if group_by_type:
-        items_sorted = sorted(inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(
-            items_list[x][-1]))
+        items_sorted = sorted(inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]))
     else:
         items_sorted = inventory[:]
 

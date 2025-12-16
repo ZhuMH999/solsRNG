@@ -3,7 +3,7 @@ import time
 from snippets import buff_manager as buffm
 from snippets import inventory_UI_manager as iUIm
 from snippets import roll_manager as rollm
-from snippets.constants import aura_list, limbo_aura_list, biome_list
+from snippets.constants import aura_list, limbo_aura_list, biome_list, items_list, ITEMS_DIMENSIONS, INV_DIMENSIONS
 
 class Model:
     def __init__(self):
@@ -17,15 +17,8 @@ class Model:
         self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]
 
         self.inventory = []
-        self.items_inventory = [i for i in range(57)]
+        self.items_inventory = {i: 1 for i in range(len(items_list))}
         self.buffs = []
-        for i in range(43):
-            for j in range(2):
-                management, buffs = buffm.add_buffs(i, self.runes, self.buffs, self.rolls)
-                self.manage_buff_effects(management, buffs)
-        for j in range(2000):
-            management, buffs = buffm.add_buffs(29, self.runes, self.buffs, self.rolls)
-            self.manage_buff_effects(management, buffs)
 
     def check_buffs_and_remove(self):
         for b in self.buffs:
@@ -103,7 +96,7 @@ class Model:
         if visuals.page == 'inventory':
             if 385 <= x <= 845 and 245 <= y <= 620:
                 if mode == 1:
-                    clicked = iUIm.get_clicked_inventory_cell((x, y), visuals, self.inventory, visuals.inventory_info[1])
+                    clicked = iUIm.get_clicked_inventory_cell((x, y), visuals, self.inventory, visuals.inventory_info[1], INV_DIMENSIONS)
                     if clicked is None or type(clicked) == list:
                         visuals.inventory_info[1] = None
                     else:
@@ -117,9 +110,17 @@ class Model:
 
         if visuals.page == 'items-items':
             if 385 <= x <= 845 and 245 <= y <= 620:
-                if 4 <= mode <= 5:
+                if mode == 1:
+                    visuals.inventory_info[1] = iUIm.get_clicked_inventory_cell((x, y), visuals, self.items_inventory, visuals.inventory_info[1], ITEMS_DIMENSIONS, True)
+                elif 4 <= mode <= 5:
                     visuals.inventory_info[0] += (mode * 2 - 9) * -3
                     visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.items_inventory, True)
+            elif 810 <= x <= 840 and 135 <= y <= 165:
+                visuals.page = 'main'
+            elif 270 <= x <= 375 or 345 <= y <= 395:
+                if len(items_list[visuals.inventory_info[1]]) >= 4:
+                    management, buffs = buffm.add_buffs(visuals.inventory_info[1], self.runes, self.buffs, self.rolls)
+                    self.manage_buff_effects(management, buffs)
 
         if visuals.page == 'title_screen':
             if 425 <= x <= 575 and 520 <= y <= 580:

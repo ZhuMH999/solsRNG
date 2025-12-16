@@ -66,14 +66,14 @@ class Visuals:
                 if color == 'inv':
                     for i in range(len(self.model.inventory)):
                         x, cell_y, width, height, text_x, text_y = draw_inventory_slot(i, self.inventory_info[0], INV_DIMENSIONS)
-                        pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height))
+                        pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height), border_radius=5)
 
                         if 230 < text_y < 650:
                             text = self.model.inventory[i][0]
                             if 'L' in str(text):
-                                self.get_text_widget_scale_and_center((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(limbo_aura_list[int(text.split('L')[1].split(',')[0])][0]), 1)
+                                self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(limbo_aura_list[int(text.split('L')[1].split(',')[0])][0]), INV_DIMENSIONS[1])
                             else:
-                                self.get_text_widget_scale_and_center((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(aura_list[text][0]), 1)
+                                self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(aura_list[text][0]), INV_DIMENSIONS[1])
 
                 elif color == 'items':
                     self.draw_items_items_GUI()
@@ -165,8 +165,7 @@ class Visuals:
                     aura_rolled = limbo_aura_list[self.rolling_animation['final_r']]
                 else:
                     aura_rolled = None
-                add_aura_to_inv(self.rolling_animation['biome'], aura_rolled, self.model.inventory, self.rolling_animation['luck'],
-                                self.rolling_animation['rolls'], self.rolling_animation['final_r'], self.rolling_animation['t'])
+                add_aura_to_inv(self.rolling_animation['biome'], aura_rolled, self.model.inventory, self.rolling_animation['luck'], self.rolling_animation['rolls'], self.rolling_animation['final_r'], self.rolling_animation['t'])
                 self.rolling_animation = None
                 return
 
@@ -196,9 +195,9 @@ class Visuals:
                 y_offset += 20
 
             x, cell_y, width, height, text_x, text_y = draw_inventory_slot(j, self.inventory_info[0], ITEMS_DIMENSIONS, y_offset)
-            pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height))
+            pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height), border_radius=5)
             if 230 < text_y < 650:
-                self.get_text_widget_scale_and_center((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], items_list[items_sorted[i]][0], 0)
+                self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], items_list[items_sorted[i]][0], ITEMS_DIMENSIONS[1])
             j += 1
 
     def manage_cutscenes(self, rolled_aura=None, start=False):
@@ -221,6 +220,44 @@ class Visuals:
         elif pos == 'topright':
             rect.topright = (x, y)
         self.win.blit(widget, rect)
+
+    def wrap_sentance_and_draw(self, rgb, x, y, font, s, width, pos='center'):
+        words = s.split(' ')
+        lines = []
+        if len(words) == 1:
+            lines.append(words[0])
+        current_line = words[0]
+        for i in range(1, len(words)):
+            if font.size(current_line + ' ' + words[i])[0] > width:
+                lines.append(current_line)
+                current_line = words[i]
+            else:
+                current_line = current_line + ' ' + words[i]
+            if i == len(words) - 1:
+                lines.append(current_line)
+
+        line_height = font.get_height()
+        total_height = line_height * len(lines)
+        max_width = max(font.size(line)[0] for line in lines)
+
+        if pos == "topleft":
+            draw_x, draw_y = x, y
+        elif pos == "topright":
+            draw_x, draw_y = x - max_width, y
+        else:
+            start_y = y - total_height // 2
+
+            for i, line in enumerate(lines):
+                surf = font.render(line, True, rgb)
+                line_width = surf.get_width()
+                line_x = x - line_width // 2
+                line_y = start_y + i * line_height
+                self.win.blit(surf, (line_x, line_y))
+            return
+
+        for i, line in enumerate(lines):
+            surf = font.render(line, True, rgb)
+            self.win.blit(surf, (draw_x, draw_y + i * line_height))
 
     def get_translucent_object_and_draw(self, rgb, x, y, sizex, sizey, transparency, border_radius=0):
         s = pygame.Surface((sizex, sizey), pygame.SRCALPHA)

@@ -36,6 +36,7 @@ HEIGHT = 750
 
 SARPANCHBOLD = {40: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 40),
                 30: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 30),
+                25: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 25),
                 20: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 20),
                 15: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 15),
                 10: pygame.font.Font('files/fonts/Sarpanch-Bold.ttf', 10)}
@@ -70,7 +71,7 @@ UI_BOXES = [
     (['inventory', 'items-gears', 'items-items'], (100, 100, 100), 150, 125, 700, 500, 255),        # Entire aura and item background
     (['inventory', 'items-gears', 'items-items'], (110, 110, 110), 385, 245, 460, 375, 255),        # aura background
     ('inventory', 'inv', None, None, None, None, None),              # Draw the inventory before proceeding
-    ('items-items', 'items', None, None, None, None, None),
+    ('items-items', 'items', None, None, None, None, None),          # Draw the items inventory before proceeding
     (['inventory', 'items-gears', 'items-items'], (100, 100, 100), 385, 240, 460, 5, 255),          # Bit to hide the text (top)
     (['inventory', 'items-gears', 'items-items'], (100, 100, 100), 385, 620, 460, 5, 255),          # Bit to hide the text (bottom)
     (['inventory', 'items-gears', 'items-items'], 'bg color', 385, 625, 460, 45, 255),              # Bit to hide the text (bottom pt 2)
@@ -84,7 +85,10 @@ UI_BOXES = [
     ('inventory', (255, 255, 255), 155, 491, 225, 3, 255),          # White bar 2
     ('inventory', (255, 255, 255), 160, 320, 200, 3, 255),           # White bar (aura stats)
     (['inventory', 'items-gears', 'items-items'], (140, 140, 140), 830, lambda i_i, total_height: 250 + 370 * ((i_i[0] * -1) / total_height) if total_height > 0 else 250, 10, lambda i_i, total_height: min(365, 365 * (INV_SHOWCASE_SIZE / total_height)) if total_height > 0 else 365, 255),  # Scrollbar
-    ('title_screen', (100, 100, 100), 280, 150, 440, 100, 150)
+    ('title_screen', (100, 100, 100), 280, 150, 440, 100, 150),  # title screen backing the words sols rng in python
+    ('items-items', (110, 110, 110), 155, 175, 225, 225, 255),    # Potion display
+    ('items-items', (130, 130, 130), 160, 345, 105, 50, 255),   # potion use number (NOT IN USE YET)
+    ('items-items', (130, 130, 130), 160, 180, 215, 160, 225)
 ]
 
 INV_DIMENSIONS = [7, 405/7]
@@ -101,11 +105,13 @@ UI_TEXT = [
     ('inventory', (255, 255, 255), 267.5, 242, SARPANCHBOLD[15], lambda inventory, i_i: f'1 in {get_aura_info(i_i, 1):,}' if i_i[1] is not None else '', 'center'),
     ('inventory', (255, 255, 255), 160, 370, SARPANCHMEDIUM[12], lambda inventory, i_i: f'Time Discovered: {i_i[1][3].strftime("%d/%m/%Y %H:%M")}' if i_i[1] is not None else '', 'topleft'),
     (['items-gears', 'items-items'], (255, 255, 255), 500, 150, SARPANCHBOLD[30], 'Inventory', 'center'),
+    ('items-items', (255, 255, 255), 267.5, 260, SARPANCHBOLD[20], lambda inventory, i_i: items_list[i_i[1]][0] if i_i[1] is not None else '', 'center'),
     ('title_screen', (255, 255, 255), 500, 200, SARPANCHBOLD[40], 'Sol\'s RNG in Python', 'center'),
-    ('title_screen', (255, 255, 255), 990, 720, SARPANCHBOLD[20], 'Version A11.1', 'topright'),
-    ('title_screen', (255, 255, 255), 10, 660, SARPANCHBOLD[20], 'Credits:', 'topleft'),
-    ('title_screen', (255, 255, 255), 10, 690, SARPANCHBOLD[20], 'ZhuMH999 (coder)', 'topleft'),
-    ('title_screen', (255, 255, 255), 10, 720, SARPANCHBOLD[20], 'xavietheskinstealer (artist)', 'topleft')
+    ('title_screen', (255, 255, 255), 990, 720, SARPANCHBOLD[20], 'Version Alpha 12.0', 'topright'),
+    ('title_screen', (255, 255, 255), 10, 630, SARPANCHBOLD[20], 'Credits:', 'topleft'),
+    ('title_screen', (255, 255, 255), 10, 660, SARPANCHBOLD[20], 'ZhuMH999 (coder)', 'topleft'),
+    ('title_screen', (255, 255, 255), 10, 690, SARPANCHBOLD[20], 'xavietheskinstealer (artist)', 'topleft'),
+    ('title_screen', (255, 255, 255), 10, 720, SARPANCHBOLD[20], 'All game idea credits goes to Sol\'s RNG on Roblox', 'topleft')
 ]
 
 aura = pygame.transform.scale(pygame.image.load('files/images/aura_button.png'), (50, 50))
@@ -137,7 +143,7 @@ BUTTONS = [
         [[(130, 130, 130), 5, 200, 50, 50]]),
     ('all', aura, (5, 255, 50, 50), None, 'img', [],
         [[(130, 130, 130), 5, 255, 50, 50]]),
-    ('inventory', (150, 150, 150), (810, 135, 30, 30), (160, 160, 160), 'rect',
+    (['inventory', 'items-items', 'items-gears'], (150, 150, 150), (810, 135, 30, 30), (160, 160, 160), 'rect',
         [['X', 825, 150, SARPANCHBOLD[20]]],
         []),
     ('inventory', (130, 130, 130), (385, 175, 227.5, 30), (140, 140, 140), 'rect',
@@ -154,6 +160,9 @@ BUTTONS = [
         []),
     ('title_screen', (100, 100, 100), (425, 520, 150, 60), (130, 130, 130), 'rect',
         [['Play', 500, 550, SARPANCHBOLD[30]]],
+        []),
+    (['items-items'], (130, 130, 130), (270, 345, 105, 50), (140, 140, 140), 'rect',
+        [['Use', 325, 370, SARPANCHBOLD[25]]],
         [])
 ]
 
