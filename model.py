@@ -6,7 +6,14 @@ from snippets import roll_manager as rollm
 from snippets.constants import aura_list, limbo_aura_list, biome_list, items_list, ITEMS_DIMENSIONS, INV_DIMENSIONS
 
 class Model:
-    def __init__(self):
+    def __init__(self, player):
+        self.player = player
+        self.player_x = 100
+        self.player_y = 480
+
+        self.camera_x = 0
+        self.camera_y = 0
+
         self.rolls = 0
         self.time = 10
         self.biome = None

@@ -9,10 +9,11 @@ import time
 pygame.init()
 
 class Visuals:
-    def __init__(self, win, model, clock):
+    def __init__(self, win, model, world, clock):
         self.win = win
         self.model = model
         self.clock = clock
+        self.world = world
 
         self.rolling_animation = None
         self.cutscene_animation = None
@@ -27,11 +28,19 @@ class Visuals:
 
     def draw(self, x, y):
         self.win.fill(return_interpolated_color(self.model.time_timer, self.model.time))
+        self.manage_player_and_world()
         self.manage_UI_text_and_boxes()
         self.manage_buttons(x, y)
         self.manage_buff_description(x, y)
         self.manage_effects_and_indicators()
         self.animate_roll()
+
+    def manage_player_and_world(self):
+        if self.page != 'title_screen':
+            for p in self.world.platforms:
+                pygame.draw.rect(self.win, (90, 90, 90), (p.x - self.model.camera_x, p.y - self.model.camera_y, p.width, p.height))
+
+            pygame.draw.rect(self.win, (200, 60, 60), (self.model.player_x - self.model.camera_x, self.model.player_y - self.model.camera_y, self.model.player.player_width, self.model.player.player_height))
 
     def manage_buttons(self, mousex, mousey):
         for page, color, size, active_color, method, labels, additional_rects in BUTTONS:

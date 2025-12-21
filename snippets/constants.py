@@ -107,7 +107,7 @@ UI_TEXT = [
     (['items-gears', 'items-items'], (255, 255, 255), 500, 150, SARPANCHBOLD[30], 'Inventory', 'center'),
     ('items-items', (255, 255, 255), 267.5, 260, SARPANCHBOLD[20], lambda inventory, i_i: items_list[i_i[1]][0] if i_i[1] is not None else '', 'center'),
     ('title_screen', (255, 255, 255), 500, 200, SARPANCHBOLD[40], 'Sol\'s RNG in Python', 'center'),
-    ('title_screen', (255, 255, 255), 990, 720, SARPANCHBOLD[20], 'Version Alpha 12.0', 'topright'),
+    ('title_screen', (255, 255, 255), 990, 720, SARPANCHBOLD[20], 'Version Alpha 13.0', 'topright'),
     ('title_screen', (255, 255, 255), 10, 630, SARPANCHBOLD[20], 'Credits:', 'topleft'),
     ('title_screen', (255, 255, 255), 10, 660, SARPANCHBOLD[20], 'ZhuMH999 (coder)', 'topleft'),
     ('title_screen', (255, 255, 255), 10, 690, SARPANCHBOLD[20], 'xavietheskinstealer (artist)', 'topleft'),
@@ -175,6 +175,10 @@ items_list = parse_file("files/game_data_raw/items.txt")
 buffs_list = parse_file("files/game_data_raw/buffs.txt")
 
 ROLL_DISTRIBUTION = [1/16, 1/14, 1/12, 1/9, 1/7, 1/5, 1/3]
+
+GRAVITY = 0.6
+JUMP_VELOCITY = -11
+PLAYER_SPEED = 4
 
 '''
 0: Glitched
