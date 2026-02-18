@@ -16,7 +16,7 @@ def resource_path(relative_path):
 # File parsing and decoding
 # -----------------------------
 def parse_file(filename, int_or_not=False):
-    with open(filename, 'r') as file:
+    with open(filename, 'r', encoding='utf-8') as file:
         result = []
         for line in file:
             parts = line.strip().split(',')
