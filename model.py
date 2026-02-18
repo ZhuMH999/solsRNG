@@ -3,7 +3,8 @@ import time
 from snippets import buff_manager as buffm
 from snippets import inventory_UI_manager as iUIm
 from snippets import roll_manager as rollm
-from snippets.constants import aura_list, limbo_aura_list, biome_list, items_list, ITEMS_DIMENSIONS, INV_DIMENSIONS
+from snippets import crafting_UI_manager as cUIm
+from snippets.constants import aura_list, limbo_aura_list, biome_list, items_list, gears_list, crafting_list, ITEMS_DIMENSIONS, INV_DIMENSIONS
 
 class Model:
     def __init__(self, player):
@@ -15,17 +16,27 @@ class Model:
         self.camera_y = 0
 
         self.rolls = 0
-        self.time = 10
+        self.time = 12
         self.biome = None
         self.runes = []
-        self.biome_timer = time.time()
+        self.biome_timer = time.time() + 60
         self.time_timer = time.time() + 30
         self.luck = 1
         self.roll_info = [time.time()-1000, 3.2, 1, 10, False, False]
 
+        self.gears_inventory = {i: 1 for i in range(len(gears_list))}
+        self.gears = [None, None]
+        self.items_inventory = {i: 4000 for i in range(len(items_list))}
         self.inventory = []
-        self.items_inventory = {i: 1 for i in range(len(items_list))}
         self.buffs = []
+
+        for i in range(1000):
+            management, buffs = buffm.add_buffs(25, self.runes, self.buffs, self.rolls)
+            self.manage_buff_effects(management, buffs)
+            management, buffs = buffm.add_buffs(16, self.runes, self.buffs, self.rolls)
+            self.manage_buff_effects(management, buffs)
+            management, buffs = buffm.add_buffs(17, self.runes, self.buffs, self.rolls)
+            self.manage_buff_effects(management, buffs)
 
     def check_buffs_and_remove(self):
         for b in self.buffs:
@@ -55,11 +66,11 @@ class Model:
             self.buffs = buffs
             self.buffs.sort(key=lambda x: x[0])
 
-    def roll_biome(self):
+    def roll_biome(self, item_used=None):
         if time.time() - self.biome_timer > 0:
             self.biome_timer = time.time() + 1
             self.biome = None
-            for i in range(9):
+            for i in range(2, 12):
                 if random.randint(1, biome_list[i][1]) == 1:
                     self.biome = i
                     print(biome_list[i])
@@ -67,13 +78,36 @@ class Model:
                     print(self.biome)
                     break
 
+        elif item_used is not None:
+            if item_used == 'sc':
+                if random.randint(1, 30000) == 1:
+                    self.biome = 0
+                elif random.randint(1, 5000) == 1:
+                    self.biome = 1
+                else:
+                    weights = []
+                    for biome in biome_list:
+                        *_, weight = biome
+                        weights.append(float(weight))
+                    self.biome = random.choices(range(15), weights=weights, k=1)[0]
+                self.biome_timer = time.time() + biome_list[self.biome][2]
+
+            elif item_used == 'br':
+                if random.randint(1, 30000) == 1:
+                    self.biome = 0
+                elif random.randint(1, 5000) == 1:
+                    self.biome = 1
+                else:
+                    self.biome = random.randint(3, 11)
+                self.biome_timer = time.time() + biome_list[self.biome][2]
+
     def change_time(self):
         if time.time() - self.time_timer > 0:
-            if self.time == 10:
-                self.time = 11
+            if self.time == 12:
+                self.time = 13
                 self.time_timer = time.time() + biome_list[self.time][2]
-            elif self.time == 11:
-                self.time = 10
+            elif self.time == 12:
+                self.time = 13
                 self.time_timer = time.time() + biome_list[self.time][2]
 
     def check_where_interact(self, x, y, visuals, mode):
@@ -118,16 +152,79 @@ class Model:
         if visuals.page == 'items-items':
             if 385 <= x <= 845 and 245 <= y <= 620:
                 if mode == 1:
-                    visuals.inventory_info[1] = iUIm.get_clicked_inventory_cell((x, y), visuals, self.items_inventory, visuals.inventory_info[1], ITEMS_DIMENSIONS, True)
+                    visuals.inventory_info[1] = iUIm.get_clicked_inventory_cell((x, y), visuals, self.items_inventory, visuals.inventory_info[1], ITEMS_DIMENSIONS, True, ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'], items_list)
                 elif 4 <= mode <= 5:
                     visuals.inventory_info[0] += (mode * 2 - 9) * -3
-                    visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.items_inventory, True)
+                    visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.items_inventory, True, ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'], items_list)
             elif 810 <= x <= 840 and 135 <= y <= 165:
                 visuals.page = 'main'
-            elif 270 <= x <= 375 or 345 <= y <= 395:
-                if len(items_list[visuals.inventory_info[1]]) >= 4:
-                    management, buffs = buffm.add_buffs(visuals.inventory_info[1], self.runes, self.buffs, self.rolls)
-                    self.manage_buff_effects(management, buffs)
+            elif 385 <= x <= 612.5 and 175 <= y <= 205:
+                visuals.inventory_info[0] = 0
+                visuals.inventory_info[1] = None
+                visuals.page = 'items-gears'
+            elif 270 <= x <= 375 and 345 <= y <= 395:
+                if visuals.inventory_info[1] is not None:
+                    if len(items_list[visuals.inventory_info[1]]) >= 4:
+                        self.items_inventory[visuals.inventory_info[1]] -= 1
+                        management, buffs = buffm.add_buffs(visuals.inventory_info[1], self.runes, self.buffs, self.rolls)
+                        self.manage_buff_effects(management, buffs)
+                    elif items_list[visuals.inventory_info[1]][1] == 'Tool':
+                        if items_list[visuals.inventory_info[1]][0] == 'Biome Randomizer':
+                            self.roll_biome('br')
+                        elif items_list[visuals.inventory_info[1]][0] == 'Strange Controller':
+                            self.roll_biome('sc')
+
+        if visuals.page == 'items-gears':
+            if 385 <= x <= 845 and 245 <= y <= 620:
+                if mode == 1:
+                    visuals.inventory_info[1] = iUIm.get_clicked_inventory_cell((x, y), visuals, self.gears_inventory, visuals.inventory_info[1], ITEMS_DIMENSIONS, True, ['Right', 'Left', 'Pocket'], gears_list)
+                elif 4 <= mode <= 5:
+                    visuals.inventory_info[0] += (mode * 2 - 9) * -3
+                    visuals.inventory_info[0] = iUIm.cutoff_inv_scrolling(visuals.inventory_info[0], self.gears_inventory, True, ['Right', 'Left', 'Pocket'], gears_list)
+            elif 617.5 <= x <= 845 and 175 <= y <= 205:
+                visuals.inventory_info[0] = 0
+                visuals.inventory_info[1] = None
+                visuals.page = 'items-items'
+            elif (170 <= x <= 235 and 265 <= y <= 330) or (300 <= x <= 365 and 265 <= y <= 330):
+                print('e')
+                if 170 <= x <= 235 and 265 <= y <= 330:
+                    name = 'Right'
+                    n = 0
+                else:
+                    name = 'Left'
+                    n = 1
+
+                if visuals.inventory_info[1] is None:
+                    self.gears[n] = None
+                elif visuals.inventory_info[1] is not None and name == gears_list[visuals.inventory_info[1]][1]:
+                    self.gears[n] = visuals.inventory_info[1]
+                    visuals.inventory_info[1] = None
+
+                '''
+        ('items-gears', (140, 140, 140), (200, 355, 50, 50), (150, 150, 150), 'rect',
+            [['P', 225, 380, SARPANCHBOLD[25]]],
+            [])'''
+
+            elif 810 <= x <= 840 and 135 <= y <= 165:
+                visuals.page = 'main'
+
+        if visuals.page in ['crafting-gear', 'crafting-aura', 'crafting-item', 'crafting-potion', 'crafting-pocket']:
+            if 20 <= x <= 250 and 375 <= y <= 525:
+                if 4 <= mode <= 5:
+                    visuals.crafting_info['scroll_left'] += (mode * 2 - 9) * -3
+                    total_height = cUIm.get_crafting_scroll_total_height(visuals.crafting_info['selected'])
+                    if visuals.crafting_info['scroll_left'] <= total_height + 135:
+                        visuals.crafting_info['scroll_left'] = total_height + 135
+                    elif visuals.crafting_info['scroll_left'] > 0:
+                        visuals.crafting_info['scroll_left'] = 0
+            elif 735 <= x <= 975 and 240 <= y <= 555:
+                if 4 <= mode <= 5:
+                    visuals.crafting_info['scroll_right'] += (mode * 2 - 9) * -3
+                    total_height = len(crafting_list) * -70
+                    if visuals.crafting_info['scroll_right'] <= total_height + 315:
+                        visuals.crafting_info['scroll_right'] = total_height + 315
+                    elif visuals.crafting_info['scroll_right'] > 0:
+                        visuals.crafting_info['scroll_right'] = 0
 
         if visuals.page == 'title_screen':
             if 425 <= x <= 575 and 520 <= y <= 580:

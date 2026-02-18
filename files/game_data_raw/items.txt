@@ -1,36 +1,36 @@
-Lucky Potion,0,60S,Potion
-Speed Potion,1,60S,Potion
-Lucky Potion L,0,300S,Potion
-Lucky Potion XL,0,600S,Potion
-Speed Potion L,1,300S,Potion
-Speed Potion XL,1,600S,Potion
-Fortune Spoid I,2,60S,Potion
-Fortune Spoid II,3,60S,Potion
-Fortune Spoid III,4,60S,Potion
-Fortune Potion I,2,300S,Potion
-Fortune Potion II,3,300S,Potion
-Fortune Potion III,4,300S,Potion
-Huge Fortune Potion I,2,3600S,Potion
-Haste Potion I,5,300S,Potion
-Haste Potion II,6,300S,Potion
-Haste Potion III,7,300S,Potion
-Potion of Bound,29,1R,Potion
-Heavenly Potion,36,1R,Potion
-Rage Potion,27,600S,Potion
-Diver Potion,28,600S,Potion
-Jewelry Potion,25,600S,Potion
-Zombie Potion,26,600S,Potion
-Godly Potion (Zeus),30,14400S,Potion
-Godly Potion (Poseidon),31,14400S,Potion
-Godly Potion (Hades),32,14400S,Potion
-Godlike Potion,33,1R,Potion
-Mixed Potion,0;1,180S,Potion
-Strange Potion I,R13-14-15-16-17,600S,Potion
-Strange Potion II,R18-19-20-21-22,600S,Potion
-Oblivion Potion,8,1R,Potion
-Warp Potion,23,2000R,Potion
-Transcendent Potion,24,20000R,Potion
-Gladiator Potion,35,900S,Potion
+Lucky Potion,0,60S,Common,Potion
+Speed Potion,1,60S,Common,Potion
+Lucky Potion L,0,300S,Common,Potion
+Lucky Potion XL,0,600S,Common,Potion
+Speed Potion L,1,300S,Common,Potion
+Speed Potion XL,1,600S,Common,Potion
+Fortune Spoid I,2,60S,Uncommon,Potion
+Fortune Spoid II,3,60S,Uncommon,Potion
+Fortune Spoid III,4,60S,Uncommon,Potion
+Fortune Potion I,2,300S,Uncommon,Potion
+Fortune Potion II,3,300S,Uncommon,Potion
+Fortune Potion III,4,300S,Uncommon,Potion
+Huge Fortune Potion I,2,3600S,Uncommon,Potion
+Haste Potion I,5,300S,Uncommon,Potion
+Haste Potion II,6,300S,Uncommon,Potion
+Haste Potion III,7,300S,Uncommon,Potion
+Potion of Bound,29,1R,Epic,Potion
+Heavenly Potion,36,1R,Legendary,Potion
+Rage Potion,27,600S,Rare,Potion
+Diver Potion,28,600S,Rare,Potion
+Jewelry Potion,25,600S,Rare,Potion
+Zombie Potion,26,600S,Rare,Potion
+Godly Potion (Zeus),30,14400S,Legendary,Potion
+Godly Potion (Poseidon),31,14400S,Legendary,Potion
+Godly Potion (Hades),32,14400S,Legendary,Potion
+Godlike Potion,33,1R,Mythical,Potion
+Mixed Potion,0;1,180S,Common,Potion
+Strange Potion I,R13-14-15-16-17,600S,Rare,Potion
+Strange Potion II,R18-19-20-21-22,600S,Rare,Potion
+Oblivion Potion,8,1R,Oblivion,Potion
+Warp Potion,23,2000R,Legendary,Potion
+Transcendent Potion,24,20000R,Mythical,Potion
+Gladiator Potion,35,900S,Rare,Potion
 Rune of Wind,37,600S,Rune
 Rune of Frost,38,600S,Rune
 Rune of Rainstorm,39,600S,Rune
@@ -42,7 +42,7 @@ Rune of Nothing,44,600S,Rune
 Rune of Eclipse,45,600S,Rune
 Rune of Everything,46,300S,Rune
 Void Coin,Misc
-Lucky Penny,9,600SC0.05,Misc
+Lucky Penny,9,600S,Misc
 Gear A,Material
 Gear B,Material
 Stella's Star,Material
@@ -55,3 +55,5 @@ Piece of Star,Material
 Curruptaine,Material
 NULL?,Material
 Hour Glass,Material
+Strange Controller,Tool
+Biome Randomizer,Tool

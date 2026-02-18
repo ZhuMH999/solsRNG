@@ -45,5 +45,6 @@ class Controller:
 
         pygame.quit()
 
-c = Controller()
-asyncio.run(c.main())
+if __name__ == '__main__':
+    c = Controller()
+    asyncio.run(c.main())

@@ -1,0 +1,28 @@
+Luck Glove,Right
+Desire Glove,Right
+Lunar Device,Right
+Gemstone Gauntlet,Left
+Frozen Gauntlet,Right
+Solar Device,Right
+Dark Matter Device,Left
+Aqua Device,Right
+Shining Star,Right
+Eclipse Device,Right
+Jackpot Gauntlet,Left
+Exo Gauntlet,Right
+Windstorm Device,Right
+Flesh Device,Left
+Subzero Device,Right
+Galatic Device,Right
+Volcanic Device,Right
+Exoflex Device,Right
+Hologrammer,Right
+Ragnaröker,Right
+Gravitational Device,Left
+Darkshader,Left
+Starshaper,Right
+Neuralyzer,Right
+Pole Light Core Device,Left
+Genesis Drive,Left
+Heavenly Device,Right
+Unfathomable Ruins,Left

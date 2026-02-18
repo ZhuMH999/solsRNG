@@ -18,7 +18,7 @@ def return_interpolated_color(next_switch_time, current_time):
     time_since = min(round(time.time() - (next_switch_time - 150), 2), 150)
 
     if 15 <= time_until <= 135:
-        return _sky_blue if current_time == 10 else _night_purple
+        return _sky_blue if current_time == 12 else _night_purple
 
     if 135 <= time_since <= 150:
         t = (15 - time_until) / 30
@@ -26,7 +26,7 @@ def return_interpolated_color(next_switch_time, current_time):
         t = (15 + time_since) / 30
 
     # Interpolate depending on direction
-    if (current_time == 10 and time_since >= 135) or (current_time == 11 and time_since <= 15):  # day → fading to night
+    if (current_time == 12 and time_since >= 135) or (current_time == 13 and time_since <= 15):  # day → fading to night
         return _interpolate_color(_sky_blue, _night_purple, t)
-    elif (current_time == 10 and time_since <= 15) or (current_time == 11 and time_since >= 135):  # night → fading to day
+    elif (current_time == 12 and time_since <= 15) or (current_time == 13 and time_since >= 135):  # night → fading to day
         return _interpolate_color(_night_purple, _sky_blue, t)

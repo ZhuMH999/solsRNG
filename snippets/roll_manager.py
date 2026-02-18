@@ -9,7 +9,7 @@ def roll_aura(luck, roll_info, biome, time, rolls, inventory, runes, aura_list, 
         if is_real_roll:
             r_i[0] = t.time() + r_i[1]
 
-        if biome != 12:
+        if biome != 14:
             aura_rolled, i = roll_main_aura(luck, biome, time, runes, aura_list, biome_list, buffs)
         else:
             aura_rolled, i = roll_limbo_aura(luck, limbo_aura_list)
@@ -38,7 +38,12 @@ def roll_main_aura(luck, biome, time, runes, aura_list, biome_list, buffs):
         rarity = aura_list[i][1] / luck
 
         # If the aura is from glitch or dreamspace + it is not any of the biomes
-        if len(aura_list[i]) == 3 and aura_list[i][2] != biome and biome != 0 and (aura_list[i][2] == 0 or aura_list[i][2] == 1):
+        if len(aura_list[i]) == 3 and aura_list[i][2] != biome and biome != 0 and (aura_list[i][2] == 0 or aura_list[i][2] == 2):
+            continue
+
+        # If the aura can only / cannot be rolled in a specific biome
+        if (len(aura_list[i]) == 3 and type(aura_list[i][2]) == str) and (('O' in aura_list[i][2] and aura_list[i][2].split('O')[1] == biome) or ('N' in aura_list[i][2] and aura_list[i][2].split('N')[1] == biome)):
+            print(aura_list[i])
             continue
 
         # If the aura can only be rolled with a specific effect
@@ -55,13 +60,13 @@ def roll_main_aura(luck, biome, time, runes, aura_list, biome_list, buffs):
                 continue
 
         # If you roll the aura OR there are no more auras below
-        if random.randint(1, int(round(rarity, 3) * 1000)) <= 1000 or (161 > i > 2 and aura_list[i + 1][1] < luck) or aura_list[i][1] == 2:
+        if random.randint(1, int(round(rarity, 3) * 1000)) <= 1000 or (188 > i > 2 and aura_list[i + 1][1] < luck) or aura_list[i][1] == 2:
             return aura_list[i], i
 
 def add_aura_to_inv(biome, aura_rolled, inventory, luck, r, i, d=datetime.now()):
-    if biome == 12 and len(aura_rolled) == 4:
+    if biome == 14 and len(aura_rolled) == 4:
         inventory.append([f'L{i},{aura_rolled[2]}', luck, r, d])
-    elif biome == 12 and len(aura_rolled) == 3:
+    elif biome == 14 and len(aura_rolled) == 3:
         inventory.append([aura_rolled[2], luck, r, d])
     else:
         inventory.append([i, luck, r, d])
@@ -88,11 +93,11 @@ def manage_luck(roll_info, luck):
 
 def manage_breakthrough(aura_bt, biome, time, runes, biome_list):
     # If it is a biome, return the biome bt multiplier
-    if aura_bt == biome or (aura_bt < 10 and aura_bt in runes):
+    if aura_bt == biome or (aura_bt < 13 and aura_bt in runes):
         return biome_list[aura_bt][3]
 
     # If it is time, return 10
-    elif aura_bt == time or (10 <= aura_bt <= 11 and aura_bt in runes):
+    elif aura_bt == time or (13 <= aura_bt <= 14 and aura_bt in runes):
         return 10
 
 def check_for_buff(buff_l, b):

@@ -1,23 +1,34 @@
-from snippets.constants import INV_DIMENSIONS, INV_SHOWCASE_SIZE, items_list, ITEMS_DIMENSIONS
+from snippets.constants import INV_DIMENSIONS, INV_SHOWCASE_SIZE, ITEMS_DIMENSIONS
 
-def get_clicked_inventory_cell(mouse_pos, visuals, inventory, current_selected, dimensions, group_by_type=False):
+rarity_order = ['Oblivion', 'Mythical', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common', 'Other']
+
+def get_clicked_inventory_cell(mouse_pos, visuals, inventory, current_selected, dimensions, group_by_type=False, l=None, type_of_list=None):
     mouse_x, mouse_y = mouse_pos
     add_y = 0
 
     if group_by_type:
-        items_sorted = sorted(inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]))
+        items_sorted = sorted(
+            filter(lambda x: inventory[x] > 0, inventory),
+            key=lambda x: (
+                l.index(type_of_list[x][-1]),
+                rarity_order.index(type_of_list[x][-2]) if type_of_list[x][-1] == "Potion" else -1
+            )
+        )
+
         current_type = None
         j = 0
+    else:
+        items_sorted = inventory
 
-    for i in range(len(inventory)):
-        if group_by_type and items_list[items_sorted[i]][-1] != current_type:
+    for i in range(len(items_sorted)):
+        if group_by_type and type_of_list[items_sorted[i]][-1] != current_type:
             add_y += (ITEMS_DIMENSIONS[1] + 5) * ((j + 5) // ITEMS_DIMENSIONS[0])
-            current_type = items_list[items_sorted[i]][-1]
+            current_type = type_of_list[items_sorted[i]][-1]
             add_y += 40
             j = 0
 
         # Compute cell position
-        x, cell_y, width, height, _, _ = draw_inventory_slot(j if group_by_type else i, visuals.inventory_info[0], dimensions, add_y)
+        x, cell_y, width, height, *_ = draw_inventory_slot(j if group_by_type else i, visuals.inventory_info[0], dimensions, add_y)
         if group_by_type:
             j += 1
 
@@ -28,10 +39,11 @@ def get_clicked_inventory_cell(mouse_pos, visuals, inventory, current_selected, 
             return i  # Return the index of the clicked cell
     return current_selected
 
-def cutoff_inv_scrolling(scroll_y, inventory, group_by_type=False):
+
+def cutoff_inv_scrolling(scroll_y, inventory, group_by_type=False, l=None, type_of_list=None):
     inv_info = max(scroll_y * -1, 0) * -1  # Prevents scrolling past 0 (layer 1)
 
-    total_height = manage_height_inv(inventory, group_by_type)
+    total_height = manage_height_inv(inventory, group_by_type, l, type_of_list)
 
     if total_height > INV_SHOWCASE_SIZE:
         if inv_info * -1 > total_height - INV_SHOWCASE_SIZE:
@@ -51,6 +63,7 @@ def draw_inventory_slot(i, scroll_y, dimensions, text_offset_y=0):
     x = 390 + x_offset
     text_y = 250 + scroll_y + y_offset + text_offset_y
     cell_y = 250 + scroll_y + y_offset + text_offset_y
+    bottom_text_marker_y = cell_y
 
     if cell_y < 245:
         height = width - (245 - cell_y)  # reduce height by the amount above 245
@@ -64,28 +77,35 @@ def draw_inventory_slot(i, scroll_y, dimensions, text_offset_y=0):
     else:
         height = width
 
-    return x, cell_y, width, height, x + width / 2, text_y + width / 2
+    return x, cell_y, width, height, x + width / 2, text_y + width / 2, bottom_text_marker_y
 
-def manage_height_inv(inventory, group_by_type=False):
+def manage_height_inv(inventory, group_by_type=False, l=None, type_of_list=None):
     current_type = None
     y_offset = 0
     j = 0
 
     if group_by_type:
-        items_sorted = sorted(inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]))
+        items_sorted = sorted(
+            filter(lambda x: inventory[x] > 0, inventory),
+            key=lambda x: (
+                l.index(type_of_list[x][-1]),
+                rarity_order.index(type_of_list[x][-2]) if type_of_list[x][-1] == "Potion" else -1
+            )
+        )
     else:
         items_sorted = inventory[:]
 
     if group_by_type:
         for i in range(len(items_sorted)):
-            if items_list[items_sorted[i]][-1] != current_type:
+            if type_of_list[items_sorted[i]][-1] != current_type:
                 y_offset += (ITEMS_DIMENSIONS[1] + 5) * ((j + 5) // ITEMS_DIMENSIONS[0])
                 j = 0
-                current_type = items_list[items_sorted[i]][-1]
+                current_type = type_of_list[items_sorted[i]][-1]
                 y_offset += 40
             j += 1
 
-        total_height = y_offset + ITEMS_DIMENSIONS[1] + 5
+        y_offset += (ITEMS_DIMENSIONS[1] + 5) * ((j + ITEMS_DIMENSIONS[0] - 1) // ITEMS_DIMENSIONS[0])
+        total_height = y_offset
 
     else:
         total_height = ((len(inventory) + 6) // INV_DIMENSIONS[0]) * (INV_DIMENSIONS[1] + 5)

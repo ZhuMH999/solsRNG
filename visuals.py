@@ -1,9 +1,12 @@
 import pygame
-from snippets.constants import SARPANCHBOLD, SEGOE_UI_SYMBOL, ARIAL, BIOME_COLORS, UI_BOXES, UI_TEXT, INV_DIMENSIONS, ITEMS_DIMENSIONS, BUTTONS, STARS, ROLL_DISTRIBUTION, biome_list, aura_list, limbo_aura_list, buffs_list, items_list
+from snippets.constants import SARPANCHBOLD, SEGOE_UI_SYMBOL, ARIAL, BIOME_COLORS, UI_BOXES, UI_TEXT, INV_DIMENSIONS, \
+    ITEMS_DIMENSIONS, BUTTONS, STARS, ROLL_DISTRIBUTION, POTION_COLORS, biome_list, aura_list, limbo_aura_list, \
+    buffs_list, items_list, gears_list, crafting_list
 from snippets.inventory_UI_manager import manage_height_inv, draw_inventory_slot
 from snippets.bg_color_manager import return_interpolated_color
 from snippets.roll_manager import roll_aura, add_aura_to_inv
 from snippets.sprite_sheet_manager import split_sprites
+from snippets.crafting_UI_manager import clip_vertical
 import time
 
 pygame.init()
@@ -20,6 +23,7 @@ class Visuals:
 
         self.page = 'title_screen'
         self.inventory_info = [0, None]
+        self.crafting_info = {'scroll_left': 0, 'scroll_right': 0, 'advanced_view_scroll': 0, 'selected': 25}  # scroll for the left side, scroll for the right side, advanced, selected
 
         self.buff_sprites = split_sprites()
 
@@ -36,7 +40,7 @@ class Visuals:
         self.animate_roll()
 
     def manage_player_and_world(self):
-        if self.page != 'title_screen':
+        if self.page != 'title_screen' and 'crafting' not in self.page:
             for p in self.world.platforms:
                 pygame.draw.rect(self.win, (90, 90, 90), (p.x - self.model.camera_x, p.y - self.model.camera_y, p.width, p.height))
 
@@ -44,7 +48,7 @@ class Visuals:
 
     def manage_buttons(self, mousex, mousey):
         for page, color, size, active_color, method, labels, additional_rects in BUTTONS:
-            if self.page in page or (page == 'all' and self.page != 'title_screen'):
+            if self.page in page or (page == 'all' and self.page != 'title_screen' and 'crafting' not in self.page):
                 big_x_limit = size[2] + size[0]
                 big_y_limit = size[3] + size[1]
                 if method == 'rect':
@@ -65,16 +69,20 @@ class Visuals:
                     self.win.blit(color, size)
 
                 for text, x, y, font in labels:
-                    if callable(text):
+                    if callable(text) and page == 'items-gears':
+                        text = text(self.model.gears)
+                        self.wrap_sentance_and_draw((255, 255, 255), x, y, font, text, size[2])
+                        continue
+                    elif callable(text):
                         text = text(self.model.roll_info, self.model.inventory)
                     self.get_text_widget_scale_and_center((255, 255, 255), x, y, font, text, 1)
 
     def manage_UI_text_and_boxes(self):
         for page, color, xpos, ypos, w, h, transparency in UI_BOXES:
-            if self.page in page or (page == 'all' and self.page != 'title_screen'):
+            if self.page in page or (page == 'all' and self.page != 'title_screen' and 'crafting' not in self.page):
                 if color == 'inv':
                     for i in range(len(self.model.inventory)):
-                        x, cell_y, width, height, text_x, text_y = draw_inventory_slot(i, self.inventory_info[0], INV_DIMENSIONS)
+                        x, cell_y, width, height, text_x, text_y, _ = draw_inventory_slot(i, self.inventory_info[0], INV_DIMENSIONS)
                         pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height), border_radius=5)
 
                         if 230 < text_y < 650:
@@ -85,27 +93,35 @@ class Visuals:
                                 self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], str(aura_list[text][0]), INV_DIMENSIONS[1])
 
                 elif color == 'items':
-                    self.draw_items_items_GUI()
+                    self.draw_items_GUI('items')
+
+                elif color == 'gears':
+                    self.draw_items_GUI('gears')
+
+                elif color == 'craft':
+                    self.draw_crafting_GUI()
 
                 elif color == 'bg color':
                     pygame.draw.rect(self.win, return_interpolated_color(self.model.time_timer, self.model.time), (xpos, ypos, w, h))
                 elif callable(ypos):
                     if self.page == 'inventory':
-                        pygame.draw.rect(self.win, color, (xpos, ypos(self.inventory_info, manage_height_inv(self.model.inventory)), w, h(self.inventory_info, manage_height_inv(self.model.inventory))), border_radius=5)
-                    else:
-                        pygame.draw.rect(self.win, color, (xpos, ypos(self.inventory_info, manage_height_inv(self.model.items_inventory, True)), w, h(self.inventory_info, manage_height_inv(self.model.items_inventory, True))), border_radius=5)
+                        pygame.draw.rect(self.win, color, (xpos, ypos(self.inventory_info, manage_height_inv(self.model.inventory)), w, h(self.inventory_info, manage_height_inv(self.model.inventory)), ), border_radius=5)
+                    elif self.page == 'items-items':
+                        pygame.draw.rect(self.win, color, (xpos, ypos(self.inventory_info, manage_height_inv(self.model.items_inventory, True, ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'], items_list)), w, h(self.inventory_info, manage_height_inv(self.model.items_inventory, True, ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'], items_list))), border_radius=5)
+                    elif self.page == 'items-gears':
+                        pygame.draw.rect(self.win, color, (xpos, ypos(self.inventory_info, manage_height_inv(self.model.gears_inventory, True, ['Right', 'Left', 'Pocket'], gears_list)), w, h(self.inventory_info, manage_height_inv(self.model.gears_inventory, True, ['Right', 'Left', 'Pocket'], gears_list))), border_radius=5)
                 else:
                     self.get_translucent_object_and_draw(color, xpos, ypos, w, h, transparency, 5)
 
         for page, color, xpos, ypos, font, text, pos in UI_TEXT:
-            if self.page in page or (page == 'all' and self.page != 'title_screen'):
+            if self.page in page or (page == 'all' and self.page != 'title_screen' and 'crafting' not in self.page):
                 if callable(text):
                     text = text(self.model.inventory, self.inventory_info)
 
                 self.get_text_widget_scale_and_center(color, xpos, ypos, font, text, 1, pos)
 
     def manage_buff_description(self, x, y):
-        if self.page != 'title_screen':
+        if self.page != 'title_screen' and 'crafting' not in self.page:
             x_grid = (1000-x)//50
             y_grid = y//50
 
@@ -120,7 +136,7 @@ class Visuals:
                 self.get_text_widget_scale_and_center((255, 255, 255), (19 - x_grid - layers) * 50 - 75, max(min(y+10, 690), 20), SARPANCHBOLD[10], buffs_list[self.model.buffs[x_grid * 15 + y_grid][0]][0], 1)
 
     def manage_effects_and_indicators(self):
-        if self.page != 'title_screen':
+        if self.page != 'title_screen' and 'crafting' not in self.page:
             # Biome and time indicator
             if self.model.biome is None:
                 self.get_text_widget_scale_and_center((255, 255, 255), 10, 695, SARPANCHBOLD[15], '[ NORMAL ]', 1, 'topleft')
@@ -170,7 +186,7 @@ class Visuals:
             self.rolling_animation['current_t_cycle_start'] = now
 
             if self.rolling_animation['t_cycle'] >= 7:
-                if self.rolling_animation['biome'] == 12:
+                if self.rolling_animation['biome'] == 14:
                     aura_rolled = limbo_aura_list[self.rolling_animation['final_r']]
                 else:
                     aura_rolled = None
@@ -181,33 +197,91 @@ class Visuals:
             if self.rolling_animation['t_cycle'] < 6:
                 self.rolling_animation['text'] = roll_aura(self.rolling_animation['luck'], self.model.roll_info, self.rolling_animation['biome'], self.model.time, self.model.rolls, self.model.inventory, self.model.runes, aura_list, limbo_aura_list, biome_list, self.model.buffs, is_real_roll=False)[0]
             else:
-                if self.rolling_animation['biome'] == 12:
+                if self.rolling_animation['biome'] == 14:
                     self.rolling_animation['text'] = limbo_aura_list[self.rolling_animation['final_r']][0]
                 else:
                     self.rolling_animation['text'] = aura_list[self.rolling_animation['final_r']][0]
 
-    def draw_items_items_GUI(self):
-        items_sorted = sorted(self.model.items_inventory, key=lambda x: ['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]))
+    def draw_items_GUI(self, type_drawing):
+        if type_drawing == 'items':
+            items_sorted = sorted(filter(lambda x: self.model.items_inventory[x] > 0, self.model.items_inventory),
+                                  key=lambda x: (['Potion', 'Rune', 'Tool', 'Material', 'Misc', 'Event'].index(items_list[x][-1]),
+                                  ['Oblivion', 'Mythical', 'Legendary', 'Epic', 'Rare', 'Uncommon', 'Common', 'Other'].index(items_list[x][-2]) if items_list[x][-1] == "Potion" else -1))
+            inventory = self.model.items_inventory
+            l = items_list
+
+        elif type_drawing == 'gears':
+            items_sorted = sorted(filter(lambda x: self.model.gears_inventory[x] > 0, self.model.gears_inventory),
+                                  key=lambda x: ['Right', 'Left', 'Pocket'].index(gears_list[x][1]))
+            inventory = self.model.gears_inventory
+            l = gears_list
+
+        else:
+            print('item not found, error!')
+            return
 
         current_type = None
         y_offset = 0
         j = 0
 
         for i in range(len(items_sorted)):
-            if items_list[items_sorted[i]][-1] != current_type:
-                y_offset += (ITEMS_DIMENSIONS[1] + 5) * ((j+5)//ITEMS_DIMENSIONS[0])
-                j = 0
-                current_type = items_list[items_sorted[i]][-1]
-                y_offset += 20
-                if 230 < y_offset + 230 + self.inventory_info[0] < 650:
-                    self.get_text_widget_scale_and_center((255, 255, 255), 607.5, y_offset + self.inventory_info[0] + 245, SARPANCHBOLD[30], current_type, 0)
-                y_offset += 20
+            item_id = items_sorted[i]
+            if inventory[item_id] > 0:
+                if l[item_id][-1] != current_type:
+                    y_offset += (ITEMS_DIMENSIONS[1] + 5) * ((j + 5) // ITEMS_DIMENSIONS[0])
+                    j = 0
+                    current_type = l[item_id][-1]
+                    y_offset += 20
 
-            x, cell_y, width, height, text_x, text_y = draw_inventory_slot(j, self.inventory_info[0], ITEMS_DIMENSIONS, y_offset)
-            pygame.draw.rect(self.win, (140, 140, 140), (x, cell_y, width, height), border_radius=5)
-            if 230 < text_y < 650:
-                self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], items_list[items_sorted[i]][0], ITEMS_DIMENSIONS[1])
-            j += 1
+                    if 210 < y_offset + 230 + self.inventory_info[0] < 630:
+                        self.get_text_widget_scale_and_center((255, 255, 255), 607.5, y_offset + self.inventory_info[0] + 245, SARPANCHBOLD[30], current_type, 0)
+                    y_offset += 20
+
+                x, cell_y, width, height, text_x, text_y, bttm_txt_marker_y = draw_inventory_slot(j, self.inventory_info[0], ITEMS_DIMENSIONS, y_offset)
+
+                if type_drawing == 'items' and l[item_id][-1] == "Potion":
+                    rarity = l[item_id][-2]
+                    frame_color = POTION_COLORS.get(rarity, POTION_COLORS['Other'])
+                else:
+                    frame_color = (140, 140, 140)
+
+                if cell_y <= 650:
+                    pygame.draw.rect(self.win, frame_color, (x, cell_y, width, height), border_radius=5)
+                    pygame.draw.rect(self.win, (80, 80, 80), (x+3, cell_y+3, width-6, height-6), border_radius=5)
+                if 230 < text_y < 650:
+                    self.wrap_sentance_and_draw((255, 255, 255), text_x, text_y, SARPANCHBOLD[10], l[item_id][0], ITEMS_DIMENSIONS[1])
+                if 210 < text_y < 630:
+                    self.get_text_widget_scale_and_center((255, 255, 255), x + ITEMS_DIMENSIONS[1] - 5, bttm_txt_marker_y + ITEMS_DIMENSIONS[1] - 5, SARPANCHBOLD[10], f'x{inventory[item_id]}', 1, 'bottomright')
+                j += 1
+
+    def draw_crafting_GUI(self):
+        if self.crafting_info['selected'] is not None:
+            y = 0
+            j = 1
+            l = None
+            for t in crafting_list[self.crafting_info['selected']]:
+                if type(t) == str:
+                    continue
+                for i in range(len(t)):
+                    if j == 1:
+                        l = gears_list
+                    elif j == 2:
+                        l = aura_list
+                    elif j == 3:
+                        l = items_list
+
+                    if 385 + y + self.crafting_info['scroll_left'] <= 535:
+                        self.get_text_widget_scale_and_center((255, 255, 255), 30, 385 + y + self.crafting_info['scroll_left'], SARPANCHBOLD[12], l[t[i][0]][0], 0, 'topleft')
+                        self.get_text_widget_scale_and_center((255, 255, 255), 240, 385 + y + self.crafting_info['scroll_left'], SARPANCHBOLD[12], f'(X / {t[i][1]})', 0, 'topright')
+                        y += 20
+                j += 1
+
+        for i in range(len(crafting_list)):
+            dimensions = clip_vertical(270 + i*70 + self.crafting_info['scroll_right'], 65, 270, 575)
+            if dimensions is not None:
+                pygame.draw.rect(self.win, (80, 80, 80), (740, dimensions[0], 220, dimensions[1]), border_radius=3)
+            if 260 <= 280 + i*70 + self.crafting_info['scroll_right'] <= 585:
+                self.get_text_widget_scale_and_center((255, 255, 255), 850, 280 + i*70 + self.crafting_info['scroll_right'], SARPANCHBOLD[15], crafting_list[i][0], 0)
 
     def manage_cutscenes(self, rolled_aura=None, start=False):
         if self.cutscene_animation is None and start:
@@ -228,6 +302,8 @@ class Visuals:
             rect.topleft = (x, y)
         elif pos == 'topright':
             rect.topright = (x, y)
+        elif pos == 'bottomright':
+            rect.bottomright = (x, y)
         self.win.blit(widget, rect)
 
     def wrap_sentance_and_draw(self, rgb, x, y, font, s, width, pos='center'):
